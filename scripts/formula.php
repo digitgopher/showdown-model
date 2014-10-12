@@ -69,65 +69,68 @@ while($row = $b_result->fetch_array(MYSQLI_ASSOC)){
     //print_r($row);
 }
 
-//// Set Pitchers
-//$p_query = "select                 
-//            m.nameFirst,
-//            m.nameLast,
-//            pba.AB,
-//            pba.H,
-//            pba.2B,
-//            pba.3B,
-//            pba.HR,
-//            (pba.H - pba.2B - pba.3B - pba.HR) as 1B,
-//            pba.BB,
-//            pba.SO,
-//            pba.PA,
-//            pba.OBP,
-//            pba.BA,
-//            pr.GB__FB as 'G/F',
-//            pr.IF__FB * 2 as 'PUpct',
-//            p.G,
-//            p.GS,
-//            p.SV,
-//            p.IPouts,
-//            p.ERA,
-//            p.W,
-//            p.L
-//    FROM master m
-//    INNER JOIN pitching p ON m.playerID = p.playerID
-//    INNER JOIN br_pitchers_ba_2013 pba ON CONCAT(m.nameFirst,' ',m.nameLast) = pba.nameFull AND p.teamID = pba.team
-//    INNER JOIN br_pitchers_ratio_2013 pr ON CONCAT(m.nameFirst,' ',m.nameLast) = pr.nameFull AND p.teamID = pr.team
-//    WHERE p.yearID = '2013'
-//    ORDER BY pba.AB DESC
-//    Limit 0,1
-//;";
-//
-////prepare
-//$p_stmt = $mysqli->prepare($p_query);
-//// Run query
-////$result = $mysqli->query($query);
-//$p_stmt->execute();
-//$p_result = $p_stmt->get_result();
-//$p_stmt->close();
-//
-//
-//while($row = $p_result->fetch_array(MYSQLI_ASSOC)){
-//    $hello = $pitchers[] = new PitcherFormula($row);
-//    //echo $row['SO'];
-//    //print_r($row);
-//}
+// Set Pitchers
+$p_query = "select                 
+            m.nameFirst,
+            m.nameLast,
+            pba.AB,
+            pba.H,
+            pba.2B,
+            pba.3B,
+            pba.HR,
+            (pba.H - pba.2B - pba.3B - pba.HR) as 1B,
+            pba.BB,
+            pba.SO,
+            pba.PA,
+            pba.OBP,
+            pba.BA,
+            pr.GB__FB as 'G/F',
+            pr.IF__FB * 2 / 100 as 'PUpct',
+            p.G,
+            p.GS,
+            p.SV,
+            p.IPouts,
+            p.ERA,
+            p.W,
+            p.L
+    FROM master m
+    INNER JOIN pitching p ON m.playerID = p.playerID
+    INNER JOIN br_pitchers_ba_2013 pba ON CONCAT(m.nameFirst,' ',m.nameLast) = pba.nameFull AND p.teamID = pba.team
+    INNER JOIN br_pitchers_ratio_2013 pr ON CONCAT(m.nameFirst,' ',m.nameLast) = pr.nameFull AND p.teamID = pr.team
+    WHERE p.yearID = '2013'
+    ORDER BY pba.AB DESC
+    Limit 2,1
+;";
+
+//prepare
+$p_stmt = $mysqli->prepare($p_query);
+// Run query
+//$result = $mysqli->query($query);
+$p_stmt->execute();
+$p_result = $p_stmt->get_result();
+$p_stmt->close();
+
+
+while($row = $p_result->fetch_array(MYSQLI_ASSOC)){
+    $hello = $pitchers[] = new PitcherFormula($row);
+    //echo $row['SO'];
+    //print_r($row);
+}
     
-// Set average pitcher
+// Set average pitcher & batter
 $avgPitcher = array('C' => 3.1, 'PU' => 2, 'SO' => 4.5, 'GB' => 5.5, 'FB' => 4, 'BB' => 1.5, '1B' => 1.8, '2B' => .65, 'HR' => .05);
+$avgbatter = array('OB' => 7.5, 'SO' => 1.15, 'GB' => 1.77, 'FB' => 1.09, 'BB' => 4.7, '1B' => 6.6, '1B+' => .41, '2B' => 1.96, '3B' => .34, 'HR' => 1.98);
 
 
 $diffs = array();
-for ($index = 1; $index <= 7; $index++) {
-    $result = $batters[0]->getRawCard($avgPitcher, $index);
+for ($index = 13; $index <= 19; $index++) {
+    //$result = $batters[0]->getRawCard($avgPitcher, $index); // index normally 1 - 7
+    $result = $pitchers[0]->getRawCard($avgbatter, $index); // index normally 13 - 19 ?
     $d = $result;
     foreach ($result as $key => $value) {
         $r = round($value);
-        $key == 'OB' ? $d[$key] = $value < $r ? ($r - $value)*2 : ($value - $r)*2 : $d[$key] = $value < $r ? $r - $value : $value - $r;
+        // Give OB/Control increased weight
+        $key == 'C' ? $d[$key] = $value < $r ? ($r - $value)*2 : ($value - $r)*2 : $d[$key] = $value < $r ? $r - $value : $value - $r;
     }
     $diffs[$index] = array_sum($d);
     print_r($result);
@@ -139,7 +142,7 @@ for ($index = 1; $index <= 7; $index++) {
     
 }
 print_r($diffs);
-print_r(BatterFormula::processChart($result));
+print_r(PitcherFormula::processChart($result));
     
 
 //foreach ($batters as $key => $value) {

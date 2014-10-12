@@ -49,6 +49,12 @@ class BatterFormula
     //
     //
     public function processChart($chart){
+        $chart = self::roundChart($chart);
+        $chart = self::prettifyChart($chart);
+        return $chart;
+    }
+    
+    private function roundChart($chart){
         // Round
         $temp = array();
         foreach ($chart as $key => $value) {
@@ -108,10 +114,14 @@ class BatterFormula
             echo 'The rounded chart is outside the bounds of 19-21 values!';
         }
         
+        return $temp;        
+    }
+    
+    private function prettifyChart($chart){
         // Convert to printable format for output
         $formatedChart = array();
         $old_val = "0";
-        foreach ($temp as $key => $value) {
+        foreach ($chart as $key => $value) {
             if($key == 'OB'){
                 continue;
             }
@@ -166,6 +176,7 @@ class BatterFormula
         
         $OB = $this->computeOB($bouts,$this->real['OBP'],$pC,$pouts);
 
+        // The sum of all the values should add up to PA if it is going to work.
         // Note we have to divide by number of outs so that the calculated negatives don't throw off the balance
         $chart = array('OB' => $OB,
             'SO' => $this->computeBatterNum_B123H($OB, $this->real['SO'], $this->real['PA'], $pC, $avgPitcher['SO']),
