@@ -2,42 +2,12 @@
 class BatterFormula
 {
     // Real-life statistical values, pulled in from database
-    private $real;
+    protected $real;
 
     // Constructor for a batter
     function __construct($rawData){
-        // Set real data structure
-        $this->real = array(
-            'nameFirst' => '', 
-            'nameLast' => '',
-            'AB' => '',
-            'H' => '',
-            '2B' => '',
-            '3B' => '',
-            'HR' => '',
-            '1B' => '',
-            'BB' => '',
-            'SO' => '',
-            'G/F' => '', 
-            'PA' => '', 
-            'Average' => '',
-            'OBP' => '',
-            'SLG' => '',
-            'G' => '',
-            'R' => '',
-            'RBI' => '',
-            'SB' => '',
-            'CS' => '');
-                    
-        // Error handling
-        if(count($rawData) != count($this->real)){
-            echo 'ERROR: The raw data passed to the batter object is wrong: input('.count($rawData).') expected('.count($this->real).')\n';
-        }
-        // Initiallize the array
-//        foreach ($this->real as $key => $value) {
-//            $this->real[$key] = $rawData[$key];
-//        }
-
+        // Set real-life statistics data structure
+        $this->real = $rawData;
     }
     
     // Process a raw chart:
@@ -123,6 +93,7 @@ class BatterFormula
         $old_val = "0";
         foreach ($chart as $key => $value) {
             if($key == 'OB'){
+                $formatedChart[$key] = $value;
                 continue;
             }
             
@@ -145,34 +116,13 @@ class BatterFormula
     
     // Get chart from data
     public function getRawCard($avgPitcher, $bouts){
-        // Batter inputs
-        $this->real['AB'] = 438;
-        $this->real['H'] = 87;
-        $this->real['2B'] = 20;
-        $this->real['3B'] = 2;
-        $this->real['HR'] = 22;
-        $this->real['1B'] = $this->real['H'] - $this->real['2B'] - $this->real['3B'] - $this->real['HR'];
-        $this->real['BB'] = 17;
-        $this->real['SO'] = 158;
-//        $GBtot = 177;
-//        $FBtot = 278;
-        $this->real['G/F'] = .4;//$GBtot/$FBtot; //.64
-        
         
         $batted_outs = $this->real['AB'] - $this->real['SO'] - $this->real['H'];
         $GBouts_tot = $this->real['G/F']*$batted_outs/(1+$this->real['G/F']);
-        $FBouts_tot = (1/$this->real['G/F'])*$batted_outs/(1+(1/$this->real['G/F']));
-        
-        
-        $this->real['PA'] = $this->real['AB'] + $this->real['BB']; // Actual statistic is 631, for our purposes here though it is 568 + 51 = 619
-        //$ba = $bH / $bAB;
-        $this->real['OBP'] = ($this->real['H'] + $this->real['BB'])/($this->real['AB'] + $this->real['BB']); // .3328 Actual statistic is .340
-//        
+        $FBouts_tot = $batted_outs - $GBouts_tot; // = (1/$this->real['G/F'])*$batted_outs/(1+(1/$this->real['G/F'])); 
         
         $pC = $avgPitcher['C'];
         $pouts = $avgPitcher['PU'] + $avgPitcher['SO'] + $avgPitcher['GB'] + $avgPitcher['FB'];
-        //$bouts = 2;
-        //$b_notouts = 20 - $bouts;
         
         $OB = $this->computeOB($bouts,$this->real['OBP'],$pC,$pouts);
 
@@ -274,7 +224,8 @@ class BatterFormula
                     break;
 
                 default:
-                    echo "Shouldn't get here ever.";
+                    // Debugging...
+                    echo $this->real['OBP']." ".$key." ".$value." Shouldn't get here ever.";
                     break;
             }
         }
@@ -311,6 +262,7 @@ class BatterFormula
 //        //print_r($r);
     }
     
+    // Will not return a negative onbase!
     function computeOB($b_outs, $obp, $pC, $p_outs){
     // General form:
     // obp = chance of batters chart * chance of getting onbase on batters chart + chance of pitchers chart * chance of getting onbase on pitchers chart
@@ -329,7 +281,9 @@ class BatterFormula
     // Only Restriction: d != e
     
     $OB = (-400*$obp + $pC*$b_outs - $pC*$p_outs - 20*$p_outs + 400)/($b_outs - $p_outs);
-    // Negative means the average pitcher needs to be worse!
+    if($OB < 0){
+        return 0;
+    }
     return $OB; 
 }
 
@@ -376,7 +330,9 @@ function computeBatterNum_B123H($OB, $metric, $PA, $pC, $p_result){
     //
     // Only Restriction: b*c != b*d
     //      essentially meaning OB can't equal Control, and PA can't be 0
-    
+    if($PA == 0 || $pC == $OB){
+        return 0; // Should this be handled differently??
+    }
     $b_result = ($PA*$p_result*($pC - $OB + 20) - 400*$metric)/($PA*($pC - $OB));
     // Negative means the average pitcher needs to be worse!
     return $b_result; 

@@ -13,7 +13,7 @@ if ($mysqli->connect_errno) {
     echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
 }
 
-// Initialize players
+// Initialize players arrays
 $batters = array();
 $pitchers = array();
 
@@ -48,10 +48,9 @@ $b_query = "SELECT
             b.CS
     FROM master m
     INNER JOIN batting b ON m.playerID = b.playerID
-    INNER JOIN br_batters_2013 br ON CONCAT(m.nameFirst,' ',m.nameLast) = br.nameFull AND b.teamID = br.team
-    WHERE b.yearID = '2013'
+    INNER JOIN br_batters_2013 br ON m.nameConcat = br.nameFull AND b.teamID = br.team
+    WHERE b.yearID = '2013' AND b.AB > 100
     ORDER BY b.AB DESC
-    Limit 0,1
 ;";
 
 //prepare
@@ -64,9 +63,7 @@ $b_stmt->close();
 
 
 while($row = $b_result->fetch_array(MYSQLI_ASSOC)){
-    $hello = $batters[] = new BatterFormula($row);
-    //echo $row['SO'];
-    //print_r($row);
+    $batters[] = new BatterFormula($row);
 }
 
 // Set Pitchers
@@ -95,11 +92,10 @@ $p_query = "select
             p.L
     FROM master m
     INNER JOIN pitching p ON m.playerID = p.playerID
-    INNER JOIN br_pitchers_ba_2013 pba ON CONCAT(m.nameFirst,' ',m.nameLast) = pba.nameFull AND p.teamID = pba.team
-    INNER JOIN br_pitchers_ratio_2013 pr ON CONCAT(m.nameFirst,' ',m.nameLast) = pr.nameFull AND p.teamID = pr.team
-    WHERE p.yearID = '2013'
+    INNER JOIN br_pitchers_ba_2013 pba ON m.nameConcat = pba.nameFull AND p.teamID = pba.team
+    INNER JOIN br_pitchers_ratio_2013 pr ON m.nameConcat = pr.nameFull AND p.teamID = pr.team
+    WHERE p.yearID = '2013' AND p.G > 9
     ORDER BY pba.AB DESC
-    Limit 2,1
 ;";
 
 //prepare
@@ -112,38 +108,66 @@ $p_stmt->close();
 
 
 while($row = $p_result->fetch_array(MYSQLI_ASSOC)){
-    $hello = $pitchers[] = new PitcherFormula($row);
-    //echo $row['SO'];
-    //print_r($row);
+    $pitchers[] = new PitcherFormula($row);
 }
     
-// Set average pitcher & batter
+// Initialize average pitcher & batter from historical charts
 $avgPitcher = array('C' => 3.1, 'PU' => 2, 'SO' => 4.5, 'GB' => 5.5, 'FB' => 4, 'BB' => 1.5, '1B' => 1.8, '2B' => .65, 'HR' => .05);
 $avgbatter = array('OB' => 7.5, 'SO' => 1.15, 'GB' => 1.77, 'FB' => 1.09, 'BB' => 4.7, '1B' => 6.6, '1B+' => .41, '2B' => 1.96, '3B' => .34, 'HR' => 1.98);
 
 
-$diffs = array();
-for ($index = 13; $index <= 19; $index++) {
-    //$result = $batters[0]->getRawCard($avgPitcher, $index); // index normally 1 - 7
-    $result = $pitchers[0]->getRawCard($avgbatter, $index); // index normally 13 - 19 ?
-    $d = $result;
-    foreach ($result as $key => $value) {
-        $r = round($value);
-        // Give OB/Control increased weight
-        $key == 'C' ? $d[$key] = $value < $r ? ($r - $value)*2 : ($value - $r)*2 : $d[$key] = $value < $r ? $r - $value : $value - $r;
+// Narrow down the player population from the comprehensive arrays read in from db.
+// Right now it is all done in query (> 50 G and > 100 AB respectively)
+
+// while(canGetMoreRealistic?):
+//      1. Get card of each batter
+//      2. Calculate average batter
+//      3. Get card of each pitcher
+//      4. Calculate average pitcher
+// 
+//
+
+// Start 1. Get card of each batter
+$batCards = array();
+// Get card of all batters
+foreach ($batters as $num => $bat) {
+    $diffs = array();
+    $batResult = array();
+    // See which number of outs on the card is the best fit
+    for ($index = 1; $index <= 7; $index++) {
+        $batResult[$index] = $bat->getRawCard($avgPitcher, $index); // index normally 1 - 7
+        //$result = $pitchers[0]->getRawCard($avgbatter, $index); // index normally 13 - 19 ?
+        $d = $batResult[$index];
+        foreach ($batResult[$index] as $key => $value) {
+            $r = round($value);
+            // Give OB increased weight
+            $key == 'OB' ? $d[$key] = $value < $r ? ($r - $value)*2 : ($value - $r)*2 : $d[$key] = $value < $r ? $r - $value : $value - $r;
+        }
+        $diffs[$index] = array_sum($d);
+        //print_r($batResult[$index]);
+
     }
-    $diffs[$index] = array_sum($d);
-    print_r($result);
-    //echo $result['OB']."\n";
-    //print_r($d);
-    //echo "\n";
-    
-    // Deal with rounding
-    
+    //print_r($diffs);
+    //$batCards[0] = (BatterFormula::processChart($batResult[array_search(min($diffs),$diffs)]));
+    $batCards[$num] = ($batResult[array_search(min($diffs),$diffs)]);
+    //print_r($batCards[$num]);
 }
-print_r($diffs);
-print_r(PitcherFormula::processChart($result));
-    
+//print_r($batCards);
+// End 1. Get card of each batter
+
+// Print averages
+$avgs = array_fill_keys(array_keys($batCards[0]), 0);
+print_r($avgs);
+foreach ($batCards as $key => $value) {
+    foreach ($value as $k => $v) {
+        $avgs[$k] += $v;
+    }
+}
+print_r($avgs);
+// Get actual averages
+$avgs = array_map( function($val,$c) { return $val / $c; }, $avgs, array_fill(0, count($avgs), count($batCards)));
+print_r($avgs);
+
 
 //foreach ($batters as $key => $value) {
 //    $result = $value->getCard($avgPitcher, 4);

@@ -2,44 +2,12 @@
 class PitcherFormula
 {
     // Real-life statistical values, pulled in from database
-    private $real;
+    protected $real;
 
     // Constructor for a pitcher
     function __construct($rawData){
-        // Set real data structure
-        $this->real = array(
-            'nameFirst' => '', 
-            'nameLast' => '',
-            'AB' => '',
-            'H' => '',
-            '2B' => '',
-            '3B' => '',
-            'HR' => '',
-            '1B' => '',
-            'BB' => '',
-            'SO' => '',
-            'PA' => '', 
-            'OBP' => '', 
-            'BA' => '',
-            'G/F' => '',
-            'PUpct' => '',
-            'G' => '',
-            'GS' => '',
-            'SV' => '',
-            'IPouts' => '',
-            'ERA' => '',
-            'W' => '',
-            'L' => '');
-                    
-        // Error handling
-        if(count($rawData) != count($this->real)){
-            echo 'ERROR: The raw data passed to the batter object is wrong: input('.count($rawData).') expected('.count($this->real).')\n';
-        }
-        // Initiallize the array trusting all are in right position
-        foreach ($this->real as $key => $value) {
-            $this->real[$key] = $rawData[$key];
-        }
-
+        // Set real-life statistics data structure
+        $this->real = $rawData;
     }
     
     // Process a raw chart:
@@ -117,6 +85,7 @@ class PitcherFormula
         $old_val = "0";
         foreach ($chart as $key => $value) {
             if($key == 'C'){
+                $formatedChart[$key] = $value;
                 continue;
             }
             
@@ -145,7 +114,7 @@ class PitcherFormula
         //      $Fly_outs = $PUouts_tot + $FBouts_tot
         $batted_outs = $this->real['AB'] - $this->real['SO'] - $this->real['H'];
         $GBouts_tot = $this->real['G/F']*$batted_outs/(1+$this->real['G/F']);
-        $Fly_outs = (1/$this->real['G/F'])*$batted_outs/(1+(1/$this->real['G/F'])); // should equal $batted_outs minus $GBouts_tot
+        $Fly_outs = $batted_outs - $GBouts_tot; // = (1/$this->real['G/F'])*$batted_outs/(1+(1/$this->real['G/F']));
         // Split fly outs into FB and PU
         $PUouts_tot = $Fly_outs*$this->real['PUpct']; // The original query pads the number for Flys into the outfield that aren't deep enough to tag, since the official statistic only counts along the lines of 'balls in the air in the infield'. PUpct should never be over 60% so we don't need value checking.
         $FBouts_tot = $Fly_outs - $PUouts_tot;
@@ -262,6 +231,7 @@ class PitcherFormula
     }
     
     // Given how many outs on pitcher's chart and the average batter, what should the control be for real-life OOB?
+    // Will not return a negative control!
     function computeControl($p_outs, $obp, $OB, $b_outs){
         // General form:
         // obp = chance of batters chart * chance of getting onbase on batters chart + chance of pitchers chart * chance of getting onbase on pitchers chart
@@ -280,7 +250,9 @@ class PitcherFormula
         // Only Restriction: d != e
 
         $pC = (400*$obp + $OB*($b_outs - $p_outs) + 20*($p_outs - 20))/($b_outs - $p_outs);
-        // Negative means the average batter needs to be worse!
+        if($pC < 0){
+            return 0;
+        }
         return $pC; 
     }
 
