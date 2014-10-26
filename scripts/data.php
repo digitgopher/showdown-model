@@ -8,61 +8,59 @@ $teams = ['ANA','ARI','ATL','BAL','BOS','CHA','CHN','CIN','CLE','COL',
 
 // Get batters
 $b_query = "SELECT
-            m.nameFirst,
-            m.nameLast,
-            b.AB,
-            b.H,
-            b.2B,
-            b.3B,
-            b.HR,
-            (b.H - b.2B - b.3B - b.HR) as 1B,
-            b.BB,
-            b.SO,
+            bs.nameFirst,
+            bs.nameLast,
+            bs.AB,
+            bs.H,
+            bs.2B,
+            bs.3B,
+            bs.HR,
+            (bs.H - bs.2B - bs.3B - bs.HR) as 1B,
+            bs.BB,
+            bs.SO,
             br.GB__FB as `G/F`,
-            (b.AB + b.BB) as PA,
-            b.H / b.AB as Average,
-            (b.H + b.BB) / (b.AB + b.BB) as OBP,
-            ((b.H - b.2B - b.3B - b.HR) + 2*b.2B + 3*b.3B + 4*b.HR) / b.AB as SLG,
-            b.G,
-            b.R,
-            b.RBI,
-            b.SB,
-            b.CS
-    FROM master m
-    INNER JOIN batting b ON m.playerID = b.playerID
-    INNER JOIN br_batters_2013 br ON m.nameConcat = br.nameFull AND b.teamID = br.team
-    WHERE b.yearID = '2013' AND b.AB > 100
-    ORDER BY b.AB DESC
+            (bs.AB + bs.BB) as PA,
+            bs.H / bs.AB as Average,
+            (bs.H + bs.BB) / (bs.AB + bs.BB) as OBP,
+            ((bs.H - bs.2B - bs.3B - bs.HR) + 2*bs.2B + 3*bs.3B + 4*bs.HR) / bs.AB as SLG,
+            bs.G,
+            bs.R,
+            bs.RBI,
+            bs.SB,
+            bs.CS
+    FROM 2013_bat_std bs
+    INNER JOIN 2013_bat_ratio br ON bs.nameFull = br.nameFull AND bs.PA = br.PA
+    WHERE bs.AB > 100
+    ORDER BY bs.AB DESC
 ;";
 
 // Set Pitchers
-$p_query = "select                 
-            m.nameFirst,
-            m.nameLast,
-            pba.AB,
-            pba.H,
-            pba.2B,
-            pba.3B,
-            pba.HR,
-            (pba.H - pba.2B - pba.3B - pba.HR) as 1B,
-            pba.BB,
-            pba.SO,
-            pba.PA,
-            pba.OBP,
-            pba.BA,
+$p_query = "SELECT                 
+            ps.nameFirst,
+            ps.nameLast,
+            po.AB,
+            po.H,
+            po.2B,
+            po.3B,
+            po.HR,
+            (po.H - po.2B - po.3B - po.HR) as 1B,
+            po.BB,
+            po.SO,
+            po.PA,
+            po.OBP,
+            po.BA,
             pr.GB__FB as 'G/F',
             pr.IF__FB * 2 / 100 as 'PUpct',
-            p.G,
-            p.GS,
-            p.SV,
-            p.IPouts,
-            p.ERA,
-            p.W,
-            p.L
-    FROM master m
-    INNER JOIN pitching p ON m.playerID = p.playerID
-    INNER JOIN br_pitchers_ba_2013 pba ON m.nameConcat = pba.nameFull AND p.teamID = pba.team
-    INNER JOIN br_pitchers_ratio_2013 pr ON m.nameConcat = pr.nameFull AND p.teamID = pr.team
-    WHERE p.yearID = '2013' AND p.G > 9
-    ORDER BY pba.AB DESC
+            ps.G,
+            ps.GS,
+            ps.SV,
+            ps.IP,
+            ps.ERA,
+            ps.W,
+            ps.L
+    FROM 2013_pitch_std ps
+    INNER JOIN 2013_pitch_opp po ON ps.nameFull = po.nameFull AND ps.IP = po.IP
+    INNER JOIN 2013_pitch_ratio pr ON ps.nameFull = pr.nameFull AND ps.IP = pr.IP
+    WHERE ps.G > 9
+    ORDER BY po.AB DESC
 ;";
