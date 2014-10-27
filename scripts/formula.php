@@ -25,7 +25,7 @@ $b_stmt = $mysqli->prepare($b_query);
 $b_stmt->execute();
 $b_result = $b_stmt->get_result();
 $b_stmt->close();
-
+echo 'Returned '.$b_result->num_rows.' batters.';
 
 while($row = $b_result->fetch_array(MYSQLI_ASSOC)){
     $batters[] = new BatterFormula($row);
@@ -38,7 +38,7 @@ $p_stmt = $mysqli->prepare($p_query);
 $p_stmt->execute();
 $p_result = $p_stmt->get_result();
 $p_stmt->close();
-
+echo 'Returned '.$p_result->num_rows.' pitchers.';
 
 while($row = $p_result->fetch_array(MYSQLI_ASSOC)){
     $pitchers[] = new PitcherFormula($row);
@@ -57,8 +57,6 @@ $avgbatter = array('OB' => 7.5, 'SO' => 1.15, 'GB' => 1.77, 'FB' => 1.09, 'BB' =
 //      2. Calculate average batter
 //      3. Get card of each pitcher
 //      4. Calculate average pitcher
-// 
-//
 
 // Start 1. Get card of each batter
 $batCards = array();
@@ -73,7 +71,7 @@ foreach ($batters as $num => $bat) {
         $d = $batResult[$index];
         foreach ($batResult[$index] as $key => $value) {
             $r = round($value);
-            // Give OB increased weight
+            // Give OB increased weight (why?)
             $key == 'OB' ? $d[$key] = $value < $r ? ($r - $value)*2 : ($value - $r)*2 : $d[$key] = $value < $r ? $r - $value : $value - $r;
         }
         $diffs[$index] = array_sum($d);
@@ -85,21 +83,42 @@ foreach ($batters as $num => $bat) {
     $batCards[$num] = ($batResult[array_search(min($diffs),$diffs)]);
     //print_r($batCards[$num]);
 }
-//print_r($batCards);
-// End 1. Get card of each batter
+//print_r($batCards);exit;
+// End 1.
 
-// Print averages
+// Start 2. Calculate average batter
+// Initialize all averages as 0
 $avgs = array_fill_keys(array_keys($batCards[0]), 0);
-print_r($avgs);
+// Get sums (Add up all the OB values, etc)
 foreach ($batCards as $key => $value) {
     foreach ($value as $k => $v) {
         $avgs[$k] += $v;
     }
 }
+// Get averages
+$avgs = array_map(
+            function($val,$c) { return $val / $c; },
+            $avgs, // numerator
+            array_fill(0, count($avgs),count($batCards)) // denominator
+        );
+// Create array for stddev
+$stddevs = array_fill_keys(array_keys($batCards[0]), array());
+// Fill the array with all values, e.g. $stddevs['OB'] = [val1,val2,...,valLast]
+foreach ($batCards as $key => $value) {
+    foreach ($value as $k => $v) {
+        // push next chart val onto appropriate array
+        $stddevs[$k][] = $v;
+    }
+}
+// Get standard deviations
+foreach ($stddevs as $key => &$value) {
+    // Transform a list of values into the stddev of those values
+    $value = sd($value);
+}
 print_r($avgs);
-// Get actual averages
-$avgs = array_map( function($val,$c) { return $val / $c; }, $avgs, array_fill(0, count($avgs), count($batCards)));
-print_r($avgs);
+print_r($stddevs);
+
+// End 2.
 
 
 //foreach ($batters as $key => $value) {

@@ -1,10 +1,13 @@
 <?php
-// Double entries for Angels,Marlins,Montreal,philly?
-$teams = ['ANA','ARI','ATL','BAL','BOS','CHA','CHN','CIN','CLE','COL',
-          'DET','FLO','HOU','KCA','LAA','LAN','MIA','MIL','MIN','MON',
-          'NYA','NYN','OAK','PHI','PHN','PIT','SDN','SEA','SFN','SLN',
-          'TBA','TEX','TOR','WAS'];
-
+// Historical data and other data sets have more names:
+// 'ANA','CHA','CHN','FLO','KCA','LAN','MON','NYA','NYN','PHN','SDN','SFN','SLN','TBA','WAS'
+$teams = ['SEA','TEX','LAA','HOU','OAK',
+          'MIN','KCR','DET','CLE','CHW',
+          'BOS','NYY','TBR','TOR','BAL',
+          
+          'LAD','COL','ARI','SFG','SDP',
+          'STL','CIN','MIL','PIT','CHC',
+          'ATL','MIA','NYM','PHI','WSN'];
 
 // Get batters
 $b_query = "SELECT
@@ -28,8 +31,8 @@ $b_query = "SELECT
             bs.RBI,
             bs.SB,
             bs.CS
-    FROM 2013_bat_std bs
-    INNER JOIN 2013_bat_ratio br ON bs.nameFull = br.nameFull AND bs.PA = br.PA
+    FROM 2014_bat_std bs
+    INNER JOIN 2014_bat_ratio br ON bs.nameFull = br.nameFull AND bs.PA = br.PA
     WHERE bs.AB > 100
     ORDER BY bs.AB DESC
 ;";
@@ -58,9 +61,39 @@ $p_query = "SELECT
             ps.ERA,
             ps.W,
             ps.L
-    FROM 2013_pitch_std ps
-    INNER JOIN 2013_pitch_opp po ON ps.nameFull = po.nameFull AND ps.IP = po.IP
-    INNER JOIN 2013_pitch_ratio pr ON ps.nameFull = pr.nameFull AND ps.IP = pr.IP
+    FROM 2014_pitch_std ps
+    INNER JOIN 2014_pitch_opp po ON ps.nameFull = po.nameFull AND ps.IP = po.IP
+    INNER JOIN 2014_pitch_ratio pr ON ps.nameFull = pr.nameFull AND ps.IP = pr.IP
     WHERE ps.G > 9
     ORDER BY po.AB DESC
 ;";
+
+$lg_averages = "
+    SELECT  
+	# Get weighted averages (straight averages will be heavy on the pitchers with 0/1/2 atbats, etc, treating them as a full player)
+	SUM(BA*PA)/SUM(PA) as BA,
+	SUM(OBP*PA)/SUM(PA) as OBP,
+	SUM(OPS*PA)/SUM(PA) as OPS,
+        # per 600 atbats is the standard
+	SUM(HR)/(SUM(PA)/600) as HR,
+	SUM(2B)/(SUM(PA)/600) as 2B,
+	SUM(3B)/(SUM(PA)/600) as 3B,
+	SUM(SB)/(SUM(PA)/600) as Sb,
+	SUM(CS)/(SUM(PA)/600) as Cs,
+	SUM(H)/(SUM(PA)/600) as H,
+	COUNT(*) 
+FROM mlb.2014_bat_std
+";
+
+// The Maths:
+
+// Function to calculate standard deviation (uses sd_square)    
+function sd($array){   
+    // square root of sum of squares devided by N
+    return sqrt(array_sum(array_map("sd_square", $array, array_fill(0,count($array), (array_sum($array) / count($array)) ) ) ) / (count($array)/*Subtract 1 if sample rather than population*/) );
+}
+
+// Function to calculate square of value - mean
+function sd_square($x, $mean){
+    return pow($x - $mean,2);
+}
