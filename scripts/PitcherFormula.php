@@ -124,7 +124,7 @@ class PitcherFormula
         $bouts = $avgBatter['SO'] + $avgBatter['GB'] + $avgBatter['FB'];
         
         $C = $this->computeControl($pouts, $this->real['OBP'], $OB, $bouts);
-        echo $C." ".$batted_outs." ".$Fly_outs." ".$PUouts_tot." ".$FBouts_tot." ".$GBouts_tot;
+        //echo $C." ".$batted_outs." ".$Fly_outs." ".$PUouts_tot." ".$FBouts_tot." ".$GBouts_tot;
 
         // The sum of all the values should add up to PA if it is going to work.
         // Note we have to divide by number of outs so that the calculated negatives don't throw off the balance

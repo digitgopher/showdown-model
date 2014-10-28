@@ -33,7 +33,7 @@ $b_query = "SELECT
             bs.CS
     FROM 2014_bat_std bs
     INNER JOIN 2014_bat_ratio br ON bs.nameFull = br.nameFull AND bs.PA = br.PA
-    WHERE bs.AB > 100
+    WHERE bs.AB > 100 #bs.nameLast = 'Zunino'
     ORDER BY bs.AB DESC
 ;";
 
@@ -84,16 +84,3 @@ $lg_averages = "
 	COUNT(*) 
 FROM mlb.2014_bat_std
 ";
-
-// The Maths:
-
-// Function to calculate standard deviation (uses sd_square)    
-function sd($array){   
-    // square root of sum of squares devided by N
-    return sqrt(array_sum(array_map("sd_square", $array, array_fill(0,count($array), (array_sum($array) / count($array)) ) ) ) / (count($array)/*Subtract 1 if sample rather than population*/) );
-}
-
-// Function to calculate square of value - mean
-function sd_square($x, $mean){
-    return pow($x - $mean,2);
-}
