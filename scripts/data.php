@@ -64,7 +64,7 @@ $p_query = "SELECT
     FROM 2014_pitch_std ps
     INNER JOIN 2014_pitch_opp po ON ps.nameFull = po.nameFull AND ps.IP = po.IP
     INNER JOIN 2014_pitch_ratio pr ON ps.nameFull = pr.nameFull AND ps.IP = pr.IP
-    WHERE ps.G > 9
+    WHERE ps.G > 9 #ps.nameFull = 'Madison Bumgarner' 
     ORDER BY po.AB DESC
 ;";
 

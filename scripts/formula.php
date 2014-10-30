@@ -64,6 +64,7 @@ $pCards = playersToCards($pitchers, 'p');
 //print_r($batCards);
 print_r(getCardAverages($pCards));
 
+print_r(averageMetaOnbase(getCardAverages($bCards),getCardAverages($pCards)));
 
 $mysqli->close();
 
