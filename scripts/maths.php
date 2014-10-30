@@ -66,3 +66,18 @@ function averageMetaOnbase($b_avgs,$p_avgs){// $setOfAvgs = [getCardAverages($pC
 function sd_sum($values){
     return sqrt(array_sum(array_map("sd_square", $values, array_fill(0,count($values),0))));
 }
+
+// Returns a random value from the distribution.
+// Function modified from an example on http://www.eboodevelopment.com/php-random-number-generator-with-normal-distribution-bell-curve/
+function purebell($mean,$std_deviation,$min=0,$max=20,$step=1) {
+  $rand1 = (float)mt_rand()/(float)mt_getrandmax();
+  $rand2 = (float)mt_rand()/(float)mt_getrandmax();
+  $gaussian_number = sqrt(-2 * log($rand1)) * cos(2 * M_PI * $rand2);
+  //$mean = ($max + $min) / 2;
+  $random_number = ($gaussian_number * $std_deviation) + $mean;
+  $random_number = round($random_number / $step) * $step;
+  if($random_number < $min || $random_number > $max) {
+    $random_number = purebell($min, $max,$std_deviation);
+  }
+  return $random_number;
+}
