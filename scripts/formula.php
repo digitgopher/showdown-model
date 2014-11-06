@@ -4,6 +4,7 @@
 // *************************
 // Setup
 // *************************
+$pathToRExecutable = 'C:\dev\R-3.1.2\bin\Rscript.exe';
 require 'BatterFormula.php';
 require 'PitcherFormula.php';
 require 'data.php';
@@ -44,7 +45,17 @@ echo 'Returned '.$p_result->num_rows.' pitchers.';
 while($row = $p_result->fetch_array(MYSQLI_ASSOC)){
     $pitchers[] = new PitcherFormula($row);
 }
-    
+
+// Run R script
+$cmd = $pathToRExecutable.' '.dirname(__FILE__).'\..\r\script.R';
+echo $cmd;
+exec($cmd, $json);
+// Transform returned json into a formatted set of batters
+$json = substr($json[0], 4);
+$json = stripslashes($json);
+$json = trim($json, '"');
+$json = json_decode($json, true);
+//print_r($json);
 
 
 // Narrow down the player population from the comprehensive arrays read in from db.
@@ -56,11 +67,14 @@ while($row = $p_result->fetch_array(MYSQLI_ASSOC)){
 //      3. Get card of each pitcher
 //      4. Calculate average pitcher
 
-$bCards = playersToCards($batters, 'b');
+$avgPitchingOpponent = array('C' => 3.1, 'PU' => 2, 'SO' => 4.5, 'GB' => 5.5, 'FB' => 4, 'BB' => 1.5, '1B' => 1.8, '2B' => .65, 'HR' => .05);
+$avgBattingOpponent = array('OB' => 7.5, 'SO' => 1.15, 'GB' => 1.77, 'FB' => 1.09, 'BB' => 4.7, '1B' => 6.6, '1B+' => .41, '2B' => 1.96, '3B' => .34, 'HR' => 1.98);
+
+$bCards = playersToCards($batters, 'b', $avgPitchingOpponent);
 //print_r($batCards);
 print_r(getCardAverages($bCards));
 
-$pCards = playersToCards($pitchers, 'p');
+$pCards = playersToCards($pitchers, 'p', $json/*$avgBattingOpponent*/);
 //print_r($batCards);
 print_r(getCardAverages($pCards));
 
@@ -69,16 +83,14 @@ print_r(averageMetaOnbase(getCardAverages($bCards),getCardAverages($pCards)));
 $mysqli->close();
 
 // Transform player data into card charts
-function playersToCards($players, $type){
+function playersToCards($players, $type, $avgOpp){
     switch ($type) {
         case 'b':
-            $avgOpp = array('C' => 3.1, 'PU' => 2, 'SO' => 4.5, 'GB' => 5.5, 'FB' => 4, 'BB' => 1.5, '1B' => 1.8, '2B' => .65, 'HR' => .05);
             $minNumOuts = 1; // These values will be used to pick the
             $maxNumOuts = 7; // most appropriate OB vs. num outs.
             $ob_ctrl = 'OB';
             break;
         case 'p':
-            $avgOpp = array('OB' => 7.5, 'SO' => 1.15, 'GB' => 1.77, 'FB' => 1.09, 'BB' => 4.7, '1B' => 6.6, '1B+' => .41, '2B' => 1.96, '3B' => .34, 'HR' => 1.98);
             $minNumOuts = 13;
             $maxNumOuts = 19;
             $ob_ctrl = 'C';
@@ -94,8 +106,7 @@ function playersToCards($players, $type){
         $result = array();
         // See which number of outs on the card is the best fit
         for ($index = $minNumOuts; $index <= $maxNumOuts; $index++) {
-            $result[$index] = $player->getRawCard($avgOpp, $index); // index normally 1 - 7
-            //$result = $pitchers[0]->getRawCard($avgbatter, $index); // index normally 13 - 19 ?
+            $result[$index] = $player->getRawCard($avgOpp, $index);
             $d = $result[$index];
             foreach ($result[$index] as $key => $value) {
                 $r = round($value);
@@ -103,8 +114,6 @@ function playersToCards($players, $type){
                 $key == $ob_ctrl ? $d[$key] = $value < $r ? ($r - $value)*2 : ($value - $r)*2 : $d[$key] = $value < $r ? $r - $value : $value - $r;
             }
             $diffs[$index] = array_sum($d);
-            //print_r($batResult[$index]);
-
         }
         //print_r($diffs);
         //$batCards[0] = (BatterFormula::processChart($batResult[array_search(min($diffs),$diffs)]));

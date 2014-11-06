@@ -1,6 +1,9 @@
 # Windows/Microsoft Ghost Files
 ~$*.*
 
+# Rstudio project files
+*.Rproj*
+
 # Compiled source #
 ###################
 *.com
