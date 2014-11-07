@@ -33,7 +33,7 @@ $b_query = "SELECT
             bs.CS
     FROM 2014_bat_std bs
     INNER JOIN 2014_bat_ratio br ON bs.nameFull = br.nameFull AND bs.PA = br.PA
-    WHERE bs.AB > 680 #bs.nameLast = 'Zunino'
+    WHERE bs.AB > 500 #bs.nameLast = 'Zunino'
     ORDER BY bs.AB DESC
 ;";
 

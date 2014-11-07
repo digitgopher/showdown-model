@@ -4,7 +4,7 @@ library(rjson)
 #hist(z, nclass=100)
 
 
-
+# Right now static, get from db
 GetValues <- function(x){
   pit_means <- c(2, 4.5, 5.5, 4, 1.5, 1.8, .65, .05);
   pit_sds <- c(.5, 1.8, 1.8, 1.8, 1, 1.2, .5, .5);
@@ -25,23 +25,34 @@ GetValues <- function(x){
   
   num <- x
   l <- list()
+  ll <- list()
   
   # Add all chart values to list
   for(i in 1:length(bat_categories)){
     l <- c(l, rtruncnorm(num,a=0, b=20, mean=bat_means[i], sd=bat_sds[i]))
   }
+  for(i in 1:length(pit_categories)){
+    ll <- c(ll, rtruncnorm(num,a=0, b=20, mean=pit_means[i], sd=pit_sds[i]))
+  }
   # then format the list: columns are results, rows are batters
   dim(l) <- c(num,length(bat_categories))
+  dim(ll) <- c(num,length(pit_categories))
   # turn into matrix that looks exactly the same, but add names
   bat_charts <- matrix(unlist(l), ncol = ncol(l), byrow = FALSE, dimnames=list(NULL, bat_categories))
+  pit_charts <- matrix(unlist(ll), ncol = ncol(ll), byrow = FALSE, dimnames=list(NULL, pit_categories))
+  
   remove(l)
+  remove(ll)
   
   # Transform so each chart adds to 20. Now cols are batters, rows are results
   bat_charts <- apply(bat_charts, 1, function(x)(x*20)/sum(x))
+  pit_charts <- apply(pit_charts, 1, function(x)(x*20)/sum(x))
   
   # see what statistics are on transformed data, analyze later
-  sds <- apply(bat_charts,1,sd)
-  avgs <- rowMeans(bat_charts)
+  bsds <- apply(bat_charts,1,sd)
+  bavgs <- rowMeans(bat_charts)
+  psds <- apply(pit_charts,1,sd)
+  pavgs <- rowMeans(pit_charts)
   
   #Get ob/con values, since we can't handle them in the matrix already created
   OB <- rtruncnorm(num,a=0, b=20, mean=7.5, sd=1.4)
@@ -49,10 +60,13 @@ GetValues <- function(x){
   
   # insert the ob values back in
   bat_charts <- rbind(OB, bat_charts)
+  pit_charts <- rbind(C, pit_charts)
   
   bat_charts <- toJSON(as.data.frame(t(bat_charts)))
-  return(bat_charts)
+  pit_charts <- toJSON(as.data.frame(t(pit_charts)))
+  
+  return(paste(c(bat_charts, pit_charts), collapse=","))
 }
 
-GetValues(5)
+GetValues(1000)
 

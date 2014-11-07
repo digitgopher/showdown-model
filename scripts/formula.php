@@ -54,8 +54,12 @@ exec($cmd, $json);
 $json = substr($json[0], 4);
 $json = stripslashes($json);
 $json = trim($json, '"');
-$json = json_decode($json, true);
-//print_r($json);
+$json = explode("},{", $json); // need to add in the braces again after this...
+$bat_json = $json[0]."}";
+$pit_json = "{".$json[1];
+$bat_json = json_decode($bat_json, true);
+$pit_json = json_decode($pit_json, true);
+//print_r($bat_json);print_r($pit_json);exit;
 
 
 // Narrow down the player population from the comprehensive arrays read in from db.
@@ -70,11 +74,16 @@ $json = json_decode($json, true);
 $avgPitchingOpponent = array('C' => 3.1, 'PU' => 2, 'SO' => 4.5, 'GB' => 5.5, 'FB' => 4, 'BB' => 1.5, '1B' => 1.8, '2B' => .65, 'HR' => .05);
 $avgBattingOpponent = array('OB' => 7.5, 'SO' => 1.15, 'GB' => 1.77, 'FB' => 1.09, 'BB' => 4.7, '1B' => 6.6, '1B+' => .41, '2B' => 1.96, '3B' => .34, 'HR' => 1.98);
 
+if($argv[3] == true){
+    echo "\n*************\nPassing distribution to calculate against rather than simply an average player.\n*************\n";
+    $avgPitchingOpponent = $pit_json;
+    $avgBattingOpponent = $bat_json;
+}
 $bCards = playersToCards($batters, 'b', $avgPitchingOpponent);
 //print_r($batCards);
 print_r(getCardAverages($bCards));
 
-$pCards = playersToCards($pitchers, 'p', $json/*$avgBattingOpponent*/);
+$pCards = playersToCards($pitchers, 'p', $avgBattingOpponent);
 //print_r($batCards);
 print_r(getCardAverages($pCards));
 
