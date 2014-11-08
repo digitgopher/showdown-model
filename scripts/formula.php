@@ -9,6 +9,7 @@ require 'PitcherFormula.php';
 require 'data.php';
 include 'maths.php';
 // Change 1
+// Change 2
 // Connect to db
 $mysqli = new mysqli("127.0.0.1", $argv[1], $argv[2], "mlb");
 if ($mysqli->connect_errno) {
