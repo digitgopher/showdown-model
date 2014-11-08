@@ -2,10 +2,11 @@ library(truncnorm)
 library(rjson)
 #z=rtruncnorm(10000,a=0, b=20, mean=1.15, sd=1.7)
 #hist(z, nclass=100)
+#hist(rtruncnorm(10000,a=0, b=20, mean=2.57, sd=2.85), nclass=100)
 
 
 # Right now static, get from db
-GetValues <- function(x){
+Continuous <- function(x){
   pit_means <- c(2, 4.5, 5.5, 4, 1.5, 1.8, .65, .05);
   pit_sds <- c(.5, 1.8, 1.8, 1.8, 1, 1.2, .5, .5);
   pit_categories <- c('PU', 'SO', 'GB', 'FB', 'BB', '1B','2B', 'HR')
@@ -68,5 +69,5 @@ GetValues <- function(x){
   return(paste(c(bat_charts, pit_charts), collapse=","))
 }
 
-GetValues(1000)
+Continuous(1000)
 
