@@ -1,0 +1,20 @@
+Blank means replace with nothing! Show spaces and tabs so you can see what is going on here!
+Number 0 can only be done to standard batting, which is read in first, because it is the only one with fielding positions.
+0)		,([\*/0-9D]*)(\r\n|\Z)	,"\1"\2
+1)		\r\nRk,Name,Age.*	
+2)		\r\n.*LgAvg[ a-zA-Z0-9].*	
+3)		\*,	,L,
+4)		#,	,S,
+5)		,([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),([0-9])	,\1 \2,R,\3
+6)		%	
+7)		,([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),	,\1 \2,\1,\2,
+8)		,\.	,0.
+
+
+9)		,([ a-zA-Z\.'-]+)	,'\1'
+10)		([a-zA-Z]{1})(')([a-zA-Z]{1})	\1\\\2\3
+11)		\r\n	),\r\n(							extended mode???
+12		,,	,NULL,
+13		,,	,NULL,
+14)		,)	,NULL)
+Put parenthesis at beginning and end of file...
