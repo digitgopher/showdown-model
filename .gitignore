@@ -3,6 +3,7 @@
 
 # Rstudio project files
 *.Rproj*
+*.Rhistory*
 
 # Compiled source #
 ###################

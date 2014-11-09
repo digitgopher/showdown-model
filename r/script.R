@@ -69,5 +69,73 @@ Continuous <- function(x){
   return(paste(c(bat_charts, pit_charts), collapse=","))
 }
 
+Discrete <- function(x){
+  batterQuery = "select `value`,
+       sum(`colName` = 'SO1') as SO,
+       sum(`colName` = 'GB1') as GB,
+       sum(`colName` = 'FB1') as FB,
+       sum(`colName` = 'BB1') as BB,
+       sum(`colName` = '1B1') as 1B,
+       sum(`colName` = '1Bplus1') as `1B+`,
+       sum(`colName` = '2B1') as 2B,
+       sum(`colName` = '3B1') as 3B,
+       sum(`colName` = 'HR1') as HR
+from (select 'SO1' as `colName`, SO1 as `value` from battercards union all
+      select 'GB1', GB1 from battercards union all
+      select 'FB1', FB1 from battercards union all
+      select 'BB1', BB1 from battercards union all
+      select '1B1', 1B1 from battercards union all
+      select '1Bplus1', 1Bplus1 from battercards union all
+      select '2B1', 2B1 from battercards union all
+      select '3B1', 3B1 from battercards union all
+      select 'HR1', HR1 from battercards
+     ) temp
+group by `value`;"
+  
+  pit_categories <- c('PU', 'SO', 'GB', 'FB', 'BB', '1B','2B', 'HR')
+  bat_categories <- c('SO', 'GB', 'FB', 'BB', '1B', '1B+', '2B', '3B', 'HR')
+  
+  mydb = dbConnect(MySQL(), user=arg1, password=arg2, dbname='mlb', host='localhost')
+  bat_data = dbGetQuery(mydb, batterQuery)
+  # Normalize
+  bat_data_pct <- apply(bat_data, 2, function(x)(x/sum(x)))
+  
+  num = x
+  
+  l = matrix(nrow = x, ncol = length(bat_categories), dimnames=list(NULL, bat_categories))
+  # Populate
+  for(i in 1:length(bat_categories)){
+    l[,i] <- sample(bat_data[,1],x,replace=TRUE,prob=bat_data_pct[,i+1])
+  }
+  
+  # Transform so each chart adds to 20. Now cols are batters, rows are results
+  # Some values are increased, some are decreased. Assume they ballance out for now...
+  bat_charts <- apply(l, 1, function(x)(x*20)/sum(x))
+  
+  # check it. They ballance out :)
+  bsds <- apply(bat_charts,1,sd)
+  bavgs <- rowMeans(bat_charts)
+  lavgs = colMeans(l)
+  lsds = apply(l,2,sd)
+  
+  #psds <- apply(pit_charts,1,sd)
+  #pavgs <- rowMeans(pit_charts)
+  
+  #Get ob/con values, since we can't handle them in the matrix already created
+  batterQuery = "SELECT onbase AS OB, count(*) AS COUNT FROM battercards GROUP BY onbase;"
+  OB = dbGetQuery(mydb, batterQuery)
+  OB = sample(OB[,1],x,replace=TRUE,prob=OB[,2])
+  #C <- rtruncnorm(num,a=0, b=20, mean=3.1, sd=1.2)
+  
+  # insert the ob values back in
+  bat_charts <- rbind(OB, bat_charts)
+  #pit_charts <- rbind(C, pit_charts)
+  
+  bat_charts <- toJSON(as.data.frame(t(bat_charts)))
+  #pit_charts <- toJSON(as.data.frame(t(pit_charts)))
+  
+  return(paste(c(bat_charts, pit_charts), collapse=","))
+}
+
 Continuous(1000)
 
