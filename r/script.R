@@ -1,9 +1,15 @@
 library(truncnorm)
 library(rjson)
+library(RMySQL)
 #z=rtruncnorm(10000,a=0, b=20, mean=1.15, sd=1.7)
 #hist(z, nclass=100)
 #hist(rtruncnorm(10000,a=0, b=20, mean=2.57, sd=2.85), nclass=100)
 
+# Used for db user and pw
+args = commandArgs(trailingOnly = TRUE)
+
+#**********************
+# Define functions
 
 # Right now static, get from db
 Continuous <- function(x){
@@ -92,25 +98,50 @@ from (select 'SO1' as `colName`, SO1 as `value` from battercards union all
      ) temp
 group by `value`;"
   
+  pitcherQuery = "select `value`,
+     sum(`colName` = 'PU1') as PU,
+       sum(`colName` = 'SO1') as SO,
+       sum(`colName` = 'GB1') as GB,
+       sum(`colName` = 'FB1') as FB,
+       sum(`colName` = 'BB1') as BB,
+       sum(`colName` = '1B1') as 1B,
+       sum(`colName` = '2B1') as 2B,
+       sum(`colName` = 'HR1') as HR
+from (select 'PU1' as `colName`, PU1 as `value` from pitchercards union all
+      select 'SO1', SO1 from pitchercards union all
+	    select 'GB1', GB1 from pitchercards union all
+      select 'FB1', FB1 from pitchercards union all
+      select 'BB1', BB1 from pitchercards union all
+      select '1B1', 1B1 from pitchercards union all
+      select '2B1', 2B1 from pitchercards union all
+      select 'HR1', HR1 from pitchercards
+     ) temp
+group by `value`;"
+  
   pit_categories <- c('PU', 'SO', 'GB', 'FB', 'BB', '1B','2B', 'HR')
   bat_categories <- c('SO', 'GB', 'FB', 'BB', '1B', '1B+', '2B', '3B', 'HR')
   
-  mydb = dbConnect(MySQL(), user=arg1, password=arg2, dbname='mlb', host='localhost')
+  mydb = dbConnect(MySQL(), user=args[1], password=args[2], dbname='mlb', host='localhost')
   bat_data = dbGetQuery(mydb, batterQuery)
+  pit_data = dbGetQuery(mydb, pitcherQuery)
   # Normalize
   bat_data_pct <- apply(bat_data, 2, function(x)(x/sum(x)))
-  
-  num = x
+  pit_data_pct <- apply(pit_data, 2, function(x)(x/sum(x)))
   
   l = matrix(nrow = x, ncol = length(bat_categories), dimnames=list(NULL, bat_categories))
+  m = matrix(nrow = x, ncol = length(pit_categories), dimnames=list(NULL, pit_categories))
   # Populate
   for(i in 1:length(bat_categories)){
     l[,i] <- sample(bat_data[,1],x,replace=TRUE,prob=bat_data_pct[,i+1])
+  }
+  for(i in 1:length(pit_categories)){
+    m[,i] <- sample(pit_data[,1],x,replace=TRUE,prob=pit_data_pct[,i+1])
   }
   
   # Transform so each chart adds to 20. Now cols are batters, rows are results
   # Some values are increased, some are decreased. Assume they ballance out for now...
   bat_charts <- apply(l, 1, function(x)(x*20)/sum(x))
+  pit_charts <- apply(m, 1, function(x)(x*20)/sum(x))
   
   # check it. They ballance out :)
   bsds <- apply(bat_charts,1,sd)
@@ -118,24 +149,37 @@ group by `value`;"
   lavgs = colMeans(l)
   lsds = apply(l,2,sd)
   
-  #psds <- apply(pit_charts,1,sd)
-  #pavgs <- rowMeans(pit_charts)
+  psds <- apply(pit_charts,1,sd)
+  pavgs <- rowMeans(pit_charts)
+  mavgs = colMeans(m)
+  msds = apply(m,2,sd)
   
   #Get ob/con values, since we can't handle them in the matrix already created
   batterQuery = "SELECT onbase AS OB, count(*) AS COUNT FROM battercards GROUP BY onbase;"
   OB = dbGetQuery(mydb, batterQuery)
   OB = sample(OB[,1],x,replace=TRUE,prob=OB[,2])
-  #C <- rtruncnorm(num,a=0, b=20, mean=3.1, sd=1.2)
+  pitcherQuery = "SELECT control AS C, count(*) AS COUNT FROM pitchercards GROUP BY control;"
+  C = dbGetQuery(mydb, pitcherQuery)
+  C = sample(C[,1],x,replace=TRUE,prob=C[,2])
   
   # insert the ob values back in
   bat_charts <- rbind(OB, bat_charts)
-  #pit_charts <- rbind(C, pit_charts)
+  pit_charts <- rbind(C, pit_charts)
   
   bat_charts <- toJSON(as.data.frame(t(bat_charts)))
-  #pit_charts <- toJSON(as.data.frame(t(pit_charts)))
+  pit_charts <- toJSON(as.data.frame(t(pit_charts)))
   
   return(paste(c(bat_charts, pit_charts), collapse=","))
 }
 
-Continuous(1000)
+#**********************
+# Program logic
+
+if(args[3] == 'continuous'){
+  Continuous(as.numeric(args[4]))
+}else if(args[3] == 'discrete'){
+  Discrete(as.numeric(args[4]))
+} else{
+  "args[3] can be either continuous or discrete"
+}
 

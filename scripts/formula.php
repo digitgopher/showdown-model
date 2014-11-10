@@ -46,21 +46,28 @@ while($row = $p_result->fetch_array(MYSQLI_ASSOC)){
     $pitchers[] = new PitcherFormula($row);
 }
 
-// Run R script
-$cmd = $pathToRExecutable.' '.dirname(__FILE__).'\..\r\script.R';
-echo $cmd;
+// Customize arguments for R script as follows:
+// dbUser dbpw function iterations
+$RScriptCmdArgs = $argv[1].' '.$argv[2].' discrete 100';
+$cmd = $pathToRExecutable.' '.dirname(__FILE__).'\..\r\script.R'.' '.$RScriptCmdArgs;
+echo "\n***\nPassing R script the args: ".$RScriptCmdArgs."\n***\n";
 exec($cmd, $json);
-// Transform returned json into a formatted set of batters
-$json = substr($json[0], 4);
-$json = stripslashes($json);
-$json = trim($json, '"');
-$json = explode("},{", $json); // need to add in the braces again after this...
-$bat_json = $json[0]."}";
-$pit_json = "{".$json[1];
-$bat_json = json_decode($bat_json, true);
-$pit_json = json_decode($pit_json, true);
-//print_r($bat_json);print_r($pit_json);exit;
-
+if(count($json) > 1){ // The first result is a log of defining MYSQL_HOME
+    $json = $json[1]; // The first result is a log of defining MYSQL_HOME, so this is the actual returned result
+    // Transform returned json into a formatted set of batters
+    $json = substr($json, 4);
+    $json = stripslashes($json);
+    $json = trim($json, '"');
+    $json = explode("},{", $json); // need to add in the braces again after this...
+    $bat_json = $json[0]."}";
+    $pit_json = "{".$json[1];
+    $bat_json = json_decode($bat_json, true);
+    $pit_json = json_decode($pit_json, true);
+//    print_r($bat_json);print_r($pit_json);exit;
+}
+else{
+    echo "\n R script returned NULL.\n";
+}
 
 // Narrow down the player population from the comprehensive arrays read in from db.
 // Right now it is all done in query (> 50 G and > 100 AB respectively)
@@ -74,10 +81,13 @@ $pit_json = json_decode($pit_json, true);
 $avgPitchingOpponent = array('C' => 3.1, 'PU' => 2, 'SO' => 4.5, 'GB' => 5.5, 'FB' => 4, 'BB' => 1.5, '1B' => 1.8, '2B' => .65, 'HR' => .05);
 $avgBattingOpponent = array('OB' => 7.5, 'SO' => 1.15, 'GB' => 1.77, 'FB' => 1.09, 'BB' => 4.7, '1B' => 6.6, '1B+' => .41, '2B' => 1.96, '3B' => .34, 'HR' => 1.98);
 
-if($argv[3] == true){
-    echo "\n*************\nPassing distribution to calculate against rather than simply an average player.\n*************\n";
+if(isset($argv[3]) && $argv[3] == true){
+    echo "\n***\nPassing distribution from R script to calculate against rather than simply an average player.\n***\n";
     $avgPitchingOpponent = $pit_json;
     $avgBattingOpponent = $bat_json;
+}
+else{
+    echo "\n***\nPassing a single average player.\n***\n";;
 }
 $bCards = playersToCards($batters, 'b', $avgPitchingOpponent);
 //print_r($batCards);
