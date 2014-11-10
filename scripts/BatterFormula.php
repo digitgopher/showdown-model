@@ -121,11 +121,55 @@ class BatterFormula
         $GBouts_tot = $this->real['G/F']*$batted_outs/(1+$this->real['G/F']);
         $FBouts_tot = $batted_outs - $GBouts_tot; // = (1/$this->real['G/F'])*$batted_outs/(1+(1/$this->real['G/F'])); 
         
-        $pC = $avgPitcher['C'];
-        $pouts = $avgPitcher['PU'] + $avgPitcher['SO'] + $avgPitcher['GB'] + $avgPitcher['FB'];
-        
-        $OB = $this->computeOB($bouts,$this->real['OBP'],$pC,$pouts);
-
+        // Get onbase, using either an average pitcher or a set of pitchers (generated from a distribution),
+        // whatever whas passed in. Parse the different data structures.
+        if(!is_array($avgPitcher['C'])){ // only one average pitcher given
+            $pC = $avgPitcher['C'];
+            $pouts = $avgPitcher['PU'] + $avgPitcher['SO'] + $avgPitcher['GB'] + $avgPitcher['FB'];
+            $OB = $this->computeOB($bouts,$this->real['OBP'],$pC,$pouts);
+            return $this->getRawCardi($avgPitcher, $pC, $OB, $GBouts_tot, $FBouts_tot);
+        }
+        else{// multiple batters passed in
+            $batters = array();
+            for ($i = 0; $i < count($avgPitcher['C']); $i++) {
+                $pC = $avgPitcher['C'][$i];
+                //echo $pC." ";
+                $pouts = $avgPitcher['PU'][$i] + $avgPitcher['SO'][$i] + $avgPitcher['GB'][$i] + $avgPitcher['FB'][$i];
+                //echo $pouts." ";
+                $OB = $this->computeOB($bouts,$this->real['OBP'],$pC,$pouts);
+                $curPitcher = array();
+                foreach ($avgPitcher as $key => $dontcareaboutthis) {
+                    $curPitcher[$key] = $avgPitcher[$key][$i];
+                }
+                //print_r($curBatter);exit;
+                $batters[] = $this->getRawCardi($curPitcher, $pC, $OB, $GBouts_tot, $FBouts_tot);;
+            }
+//            print_r($pitchers);
+            // Average them now, after the fact rather than before!
+            // Set as 0 so we can ++
+            $sums = array_fill_keys(array_keys($batters[0]), 0);
+            // Add all categories
+            foreach ($batters as $key => $batter) {
+                foreach ($batter as $k => $v) {
+                    //echo $k; exit;
+                    $sums[$k] += $v;
+                }
+            }
+            // Divide to get average
+//            print_r($batters);
+//            print_r($sums);
+            foreach ($sums as $key => &$value) {
+                $value /= count($batters);
+            }
+            //print_r($sums);//exit;
+            return $sums;
+        }
+        echo "Should never get here. Exiting!";
+        exit;
+    }
+    
+    // Internal function
+    private function getRawCardi($avgPitcher, $pC, $OB, $GBouts_tot, $FBouts_tot){
         // The sum of all the values should add up to PA if it is going to work.
         // Note we have to divide by number of outs so that the calculated negatives don't throw off the balance
         $chart = array('OB' => $OB,
@@ -164,7 +208,7 @@ class BatterFormula
                 }
             }
         }
-        //print_r($negs);
+        //print_r($negs);//exit;
         
         // Normalize, because we can't make the pitcher worse, as the pitcher is the input
         foreach ($negs as $key => $value) {
@@ -172,16 +216,25 @@ class BatterFormula
                 // Outs
                 case 'SO':
                     $sum = $chart['GB']+$chart['FB'];
+                    if($sum == 0){
+                        break; //everybody is 0! must be realllllly unproportionate somehow...
+                    }
                     $chart['GB'] += $chart['GB']/$sum*$value;
                     $chart['FB'] += $chart['FB']/$sum*$value;
                     break;
                 case 'GB':
                     $sum = $chart['SO']+$chart['FB'];
+                    if($sum == 0){
+                        break; //everybody is 0!
+                    }
                     $chart['SO'] += $chart['SO']/$sum*$value;
                     $chart['FB'] += $chart['FB']/$sum*$value;
                     break;
                 case 'FB':
                     $sum = $chart['SO']+$chart['GB'];
+                    if($sum == 0){
+                        break; //everybody is 0!
+                    }
                     $chart['GB'] += $chart['GB']/$sum*$value;
                     $chart['SO'] += $chart['SO']/$sum*$value;
                     break;
@@ -279,7 +332,7 @@ class BatterFormula
     //      e = p_outs
     //
     // Only Restriction: d != e
-    
+    //echo $b_outs." ".$obp." ".$pC." ".$p_outs;
     $OB = (-400*$obp + $pC*$b_outs - $pC*$p_outs - 20*$p_outs + 400)/($b_outs - $p_outs);
     if($OB < 0){
         return 0;

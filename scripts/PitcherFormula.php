@@ -118,14 +118,58 @@ class PitcherFormula
         // Split fly outs into FB and PU
         $PUouts_tot = $Fly_outs*$this->real['PUpct']; // The original query pads the number for Flys into the outfield that aren't deep enough to tag, since the official statistic only counts along the lines of 'balls in the air in the infield'. PUpct should never be over 60% so we don't need value checking.
         $FBouts_tot = $Fly_outs - $PUouts_tot;
-        
-        
-        $OB = $avgBatter['OB'];
-        $bouts = $avgBatter['SO'] + $avgBatter['GB'] + $avgBatter['FB'];
-        
-        $C = $this->computeControl($pouts, $this->real['OBP'], $OB, $bouts);
         //echo $C." ".$batted_outs." ".$Fly_outs." ".$PUouts_tot." ".$FBouts_tot." ".$GBouts_tot;
-
+        
+        
+        // Get control, using either an average batter or a set of batters (generated from a distribution),
+        // whatever whas passed in. Parse the different data structures.
+        if(!is_array($avgBatter['OB'])){ // only one average batter given
+            $OB = $avgBatter['OB'];
+            $bouts = $avgBatter['SO'] + $avgBatter['GB'] + $avgBatter['FB'];
+            $C = $this->computeControl($pouts, $this->real['OBP'], $OB, $bouts);
+            return $this->getRawCardi($avgBatter, $OB, $C, $PUouts_tot, $GBouts_tot, $FBouts_tot);
+        }
+        else{// multiple batters passed in
+            $pitchers = array();
+            for ($i = 0; $i < count($avgBatter['OB']); $i++) {
+                $OB = $avgBatter['OB'][$i];
+                //echo $OB." ";
+                $bouts = $avgBatter['SO'][$i] + $avgBatter['GB'][$i] + $avgBatter['FB'][$i];
+                //echo $bouts." ";
+                $C = $this->computeControl($pouts, $this->real['OBP'], $OB, $bouts);
+                $curBatter = array();
+                foreach ($avgBatter as $key => $dontcareaboutthis) {
+                    $curBatter[$key] = $avgBatter[$key][$i];
+                }
+                //print_r($curBatter);exit;
+                $pitchers[] = $this->getRawCardi($curBatter, $OB, $C, $PUouts_tot, $GBouts_tot, $FBouts_tot);
+            }
+//            print_r($pitchers);
+            // Average them now, after the fact rather than before!
+            // Set as 0 so we can ++
+            $sums = array_fill_keys(array_keys($pitchers[0]), 0);
+            // Add all categories
+            foreach ($pitchers as $key => $pitcher) {
+                foreach ($pitcher as $k => $v) {
+                    //echo $k; exit;
+                    $sums[$k] += $v;
+                }
+            }
+            // Divide to get average
+//            print_r($pitchers);
+//            print_r($sums);
+            foreach ($sums as $key => &$value) {
+                $value /= count($pitchers);
+            }
+//            print_r($sums);exit;
+            return $sums;
+        }
+        echo "Should never get here. Exiting!";
+        exit;
+    }
+    
+    // Internal function
+    private function getRawCardi($avgBatter, $OB, $C, $PUouts_tot, $GBouts_tot, $FBouts_tot){
         // The sum of all the values should add up to PA if it is going to work.
         // Note we have to divide by number of outs so that the calculated negatives don't throw off the balance
         $chart = array('C' => $C,// computePitcherSlots($pC, $metric, $PA, $OB, $b_result)
