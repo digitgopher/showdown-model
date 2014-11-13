@@ -1,0 +1,52 @@
+/* CSS for the Showdown calculator page. */
+div#form1, div#form2{
+font-family:'Verdana',sans-serif;
+width:500px;
+height:500px;
+border:2px solid #456321;
+padding:10px;
+background-color:#f3f3f3;
+border-radius:3px;
+float:left;
+text-align:right;
+margin-left:10px;
+margin-top:20px
+}
+h3,p{
+text-align:center;
+color:#aa2322
+}
+input{
+width:100%;
+margin:10px 0;
+padding:5px;
+height:40px;
+box-shadow:1px 1px 1px 1px gray;
+border-radius:5px
+}
+input#submit{
+margin:10px 15px 10px 0;
+padding:5px;
+background-color:#3fb8e8;
+box-shadow:0 3px 0 0 #6776ba;
+border-radius:5px;
+font-size:20px
+}
+textarea{
+margin:10px 0;
+padding:5px;
+box-shadow:5px 1px 1px 1px gray;
+border-radius:5px
+}
+div#container{
+margin:50px auto;
+width:960px
+}
+h1{
+color:#bbbaa1;
+text-shadow:1px 1px 1px gray
+}
+h2{
+color:#bb4555;
+text-shadow:1px 1px 1px gray
+}
