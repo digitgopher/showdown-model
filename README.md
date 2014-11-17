@@ -10,7 +10,7 @@ How does it work? *Right now it takes some coding knowledge :)*
 <li> `sites` contains the code for a game simulater </li>
 </ul>
 
-Why in the world are you using php on the command line? *At one point in time I wanted to learn php. Don't hate.*
+Why in the world are you using php on the command line? *Because I wanted to, and it works. Don't hate.*
 
 #### About the game itself
 In a nutshell: Play a game of baseball with a 20 sided die and special trading cards.  
