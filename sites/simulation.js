@@ -1,14 +1,15 @@
+//Requirements:
+//Return the average statistics of the players passed in.
+//  - can be passed either one batter or 9, and only one pitcher
+//  - return the average number of each result as a percentage of average number of plate appearances
 
+// Simulates a large number of innings played, and does that 30 times to average the results. 
 function sim(json){
   // json.name , json["name"] both work
   var startTime = Date.now();
   var endTime = Date.now();
   //return "startTime:"+startTime+",jsonname:"+json.name;
-  
-  // *****
-  // Code up the logic
-  // *****
-  
+
   // Usage
   // Get first batter: batters[0]
   // Get first batter's chart: batters[0][0]
@@ -103,80 +104,86 @@ function sim(json){
     // }
     // console.log(sum);
   // }
+
+  var temp = new Array(); // to contain results of each simulation to be averaged together
   
-  // Nobody is on base to start with!
-  var bases = [false,false,false];
-  var score = 0;
-  
-  // A place to hold the raw results of the simulation
-  var batterTallies = [
-    [[0,0,0,0,0,0,0,0,0],[0,0/*How many steals*/,0/*Fielding representation*/]],
-    [[0,0,0,0,0,0,0,0,0],[0,0,0]],
-    [[0,0,0,0,0,0,0,0,0],[0,0,0]],
-    [[0,0,0,0,0,0,0,0,0],[0,0,0]],
-    [[0,0,0,0,0,0,0,0,0],[0,0,0]],
-    [[0,0,0,0,0,0,0,0,0],[0,0,0]],
-    [[0,0,0,0,0,0,0,0,0],[0,0,0]],
-    [[0,0,0,0,0,0,0,0,0],[0,0,0]],
-    [[0,0,0,0,0,0,0,0,0],[0,0,0]]
-  ]
-  
-  // Don't know what the group pitcherTallies[0][1] is for yet
-  var pitcherTallies = [
-    [[0,0,0,0,0,0,0,0],[0,0]]
-  ]
-  
-  var results = new Array(); // to contain all results of simulation as json to be displayed in browser
-  
-  var curBatter = 0;
-  var abres = ''; // current batter's result
-  
-  
-  // TODO: Run the simulation 30 times and then get averages.
-  
-  
-  // We can play as many innings as we want, in multiples of 9 to keep things even.
-  var numGames = 1000
-  for (var i = 1; i <= 9*numGames; i++) {
-    var outs = 0;
-    // end inning after 3 outs
-    while(outs < 3){
-      abres = getResultAtBat();
-      //console.log(abres);
-      // Out result
-      if(abres == "pu" || abres == "so" || abres == "gb" || abres == "fb"){
-        outs++;
+  // Run the simulation 30 times and then get averages.
+  // TODO: Let user input this to tradeoff accuracy for speed
+  // 10000 is a good speed/accuracy ratio
+  var sig = 2; // sig = statistically significant
+  for (var a = 0; a < sig; a++){
+    // Prepare everything for a simulation
+    var bases = [false,false,false]; // Nobody is on base to start with!
+    var score = 0; // clear score
+    // A place to hold the raw results of the simulation
+    var batterTallies = [
+      [[0,0,0,0,0,0,0,0,0],[0,0/*How many steals*/,0/*Fielding representation*/]],
+      [[0,0,0,0,0,0,0,0,0],[0,0,0]],
+      [[0,0,0,0,0,0,0,0,0],[0,0,0]],
+      [[0,0,0,0,0,0,0,0,0],[0,0,0]],
+      [[0,0,0,0,0,0,0,0,0],[0,0,0]],
+      [[0,0,0,0,0,0,0,0,0],[0,0,0]],
+      [[0,0,0,0,0,0,0,0,0],[0,0,0]],
+      [[0,0,0,0,0,0,0,0,0],[0,0,0]],
+      [[0,0,0,0,0,0,0,0,0],[0,0,0]]
+    ]
+    // Don't know what the group pitcherTallies[0][1] is for yet
+    var pitcherTallies = [
+      [[0,0,0,0,0,0,0,0],[0,0]]
+    ]
+    var curBatter = 0; // set first batter
+    var abres = ''; // current batter's result
+    
+    
+    // We can play as many innings as we want, in multiples of 9 to keep things even.
+    var numGames = 162
+    for (var i = 1; i <= 9*numGames; i++) {
+      var outs = 0;
+      // end inning after 3 outs
+      while(outs < 3){
+        abres = getResultAtBat();
+        //console.log(abres);
+        // Out result
+        if(abres == "pu" || abres == "so" || abres == "gb" || abres == "fb"){
+          outs++;
+        }
+        // Not an out result
+        else{
+          advanceRunners();
+        }
+        // Save statistics for display
+        logResult();
+        // Next batter
+        curBatter = (curBatter + 1) % 9;
+        if(outs < 3){
+          //console.log("Batter "+ curBatter + " up. Inning " + i + ": " + outs + " outs.");
+        }
+        else{
+          //console.log("Inning over. Moving to the "+ (i+1));
+        }
+        //return;
       }
-      // Not an out result
-      else{
-        advanceRunners();
-      }
-      // Save statistics for display
-      logResult();
-      // Next batter
-      curBatter = (curBatter + 1) % 9;
-      if(outs < 3){
-        //console.log("Batter "+ curBatter + " up. Inning " + i + ": " + outs + " outs.");
-      }
-      else{
-        //console.log("Inning over. Moving to the "+ (i+1));
-      }
-      //return;
+      // Inning over. Clear the bases
+      bases = [false,false,false];
     }
-    // Inning over. Clear the bases
-    bases = [false,false,false];
+    // Games over
+    score /= numGames;
+    //console.log(pitcherTallies);
+    //console.log(batterTallies);
+    // Transform what logResult does into the statistics that will be output
+    temp.push(transformRawResultsToStatistics());
+    
+    //console.log("Simulation results: ");
+  
   }
-  console.log(pitcherTallies);
-  console.log(batterTallies);
-  // Transform what logResult does into the statistics that will be output
-  transformRawResultsToStatistics();
+  //console.log(temp);
+  // true flag means 9 batters, false means one
+  results = averageResults(true); // to contain all results of simulation as json to be displayed in browser
+  return JSON.stringify(results);
   
-  console.log("Simulation results: ");
-  console.log(results);
-  // Game over
-  return results;
-  
-  // functions
+  // End simulation logic
+  //*********************
+  // Functions below
   
   function getResultAtBat(){
     // Which chart?
@@ -321,20 +328,109 @@ function sim(json){
   // results has 11 items:
   // The first 9 are batters, then pitcher, then score
   function transformRawResultsToStatistics(){
-    // Names to send back
-    var batStatList = {"SO/PA": 0, "GB/PA": 0, "FB/PA": 0, "BB/PA": 0, "1B/PA": 0, "1B+/PA": 0, "2B/PA": 0, "3B/PA": 0, "HR/PA": 0, "OBP": 0}; // remember PU are eaten up by FB
-    var pitStatList = ["PU/PA", "SO/PA", "GB/PA", "FB/PA", "BB/PA", "1B/PA", "2B/PA", "HR/PA", "OBP"]; // remember 1B+ and 3B are eaten up by 1B and 3B
-    console.log("Score: "+score);
+    var r = new Array();
     // Access a specific raw value with batterTallies[batterIndex][0][resultOfAtbat]
     // Compute each (resultOfAtbat/Plate Appearances), as well as OBP
     
-    // Initialize
-    // for (var i = 0; i < batters.length; i++) {
-      // results.push({"SO/PA": 0, "GB/PA": 0, "FB/PA": 0, "BB/PA": 0, "1B/PA": 0, "1B+/PA": 0, "2B/PA": 0, "3B/PA": 0, "HR/PA": 0, "OBP": 0});
-    // }
-    results.push({"SO/PA": 0, "GB/PA": 0, "FB/PA": 0, "BB/PA": 0, "1B/PA": 0, "1B+/PA": 0, "2B/PA": 0, "3B/PA": 0, "HR/PA": 0, "OBP": 0});
-    results[0]["GB/PA"] = batterTallies[0][0][bat0Map["gb"]] / batterTallies[0][0].reduce(function(a, b) {return a + b;});
+    //Batters
+    for (var i = 0; i < batterTallies.length; i++) {
+      var PA = batterTallies[i][0].reduce(function(a, b) {return a + b;});
+     // remember PU are eaten up by FB
+      r.push({"SO/PA": batterTallies[i][0][bat0Map["so"]] / PA, 
+      "GB/PA": batterTallies[i][0][bat0Map["gb"]] / PA, 
+      "FB/PA": batterTallies[i][0][bat0Map["fb"]] / PA, 
+      "BB/PA": batterTallies[i][0][bat0Map["bb"]] / PA, 
+      "1B/PA": batterTallies[i][0][bat0Map["1b"]] / PA, 
+      "1B+/PA": batterTallies[i][0][bat0Map["1b+"]] / PA, 
+      "2B/PA": batterTallies[i][0][bat0Map["2b"]] / PA, 
+      "3B/PA": batterTallies[i][0][bat0Map["3b"]] / PA, 
+      "HR/PA": batterTallies[i][0][bat0Map["hr"]] / PA, 
+      "OBP": (batterTallies[i][0][bat0Map["bb"]] + batterTallies[i][0][bat0Map["1b"]] + batterTallies[i][0][bat0Map["1b+"]] + batterTallies[i][0][bat0Map["2b"]] + batterTallies[i][0][bat0Map["3b"]] + batterTallies[i][0][bat0Map["hr"]]) / PA
+      });
+    }
+    //Pitchers
+    for (var i = 0; i < pitcherTallies.length; i++) {
+      // remember 1B+ and 3B are eaten up by 1B and 3B
+      var PA = pitcherTallies[i][0].reduce(function(a, b) {return a + b;});
+       // remember PU are eaten up by FB
+      r.push({"PU/PA": pitcherTallies[i][0][pit0Map["pu"]] / PA,
+      "SO/PA": pitcherTallies[i][0][pit0Map["so"]] / PA, 
+      "GB/PA": pitcherTallies[i][0][pit0Map["gb"]] / PA, 
+      "FB/PA": pitcherTallies[i][0][pit0Map["fb"]] / PA, 
+      "BB/PA": pitcherTallies[i][0][pit0Map["bb"]] / PA, 
+      "1B/PA": pitcherTallies[i][0][pit0Map["1b"]] / PA,
+      "2B/PA": pitcherTallies[i][0][pit0Map["2b"]] / PA, 
+      "HR/PA": pitcherTallies[i][0][pit0Map["hr"]] / PA, 
+      "OBP": (pitcherTallies[i][0][pit0Map["bb"]] + pitcherTallies[i][0][pit0Map["1b"]] + pitcherTallies[i][0][pit0Map["2b"]] + pitcherTallies[i][0][pit0Map["hr"]]) / PA
+      });
+    }
     
+    // Score
+    r.push({"Score" : score});
+    
+    return r;
+  }
+  
+  // Take temp and average all the values over number of simulation runs
+  // At this point temp contains:
+  //       temp[simNumber][batterNo,pitcher,score][each value]
+  // n^3...ugh
+  function averageResults(nineBatters){
+    // Initialize an array
+    // var r = zeros([batters.length,batters[0][0].length]);
+    // function zeros(dim){
+      // var array = [];
+      // for (var i = 0; i < dim[0]; ++i) {
+        // array.push(dim.length == 1 ? 0 : zeros(dim.slice(1)));
+      // }
+      // return array;
+    // }
+    var r = [];
+    for (i = 0; i < batters.length; i++) {
+      r.push({"SO/PA": 0,"GB/PA": 0,"FB/PA": 0,"BB/PA": 0,"1B/PA": 0,"1B+/PA": 0,"2B/PA": 0,"3B/PA": 0,"HR/PA": 0, "OBP": 0});
+    }
+    
+    // Add up first...
+    // for each of the simulation runs
+    for (var i = 0; i < temp.length; i++) {
+      // for each of the batters, pitcher, score, whatever is there
+      for (var j = 0; j < 9; j++){// the first 9 are batters
+        // for each of the attributes of said batter
+        for (var k in temp[i][j]){
+          // add the results from each of the simulations
+          r[j][k] += temp[i][j][k];
+        }
+      }
+    }
+    
+    // ...also the pitcher...
+    r.push({"PU/PA": 0,"SO/PA": 0,"GB/PA": 0,"FB/PA": 0,"BB/PA": 0,"1B/PA": 0,"2B/PA": 0,"HR/PA": 0, "OBP": 0});
+    // for each of the simulation runs
+    for (var i = 0; i < temp.length; i++) {
+      // for each of the attributes of the pitcher
+      for (var k in temp[i][9]){
+        // add the results from each of the simulations
+        r[9][k] += temp[i][9][k];
+      }
+    }
+    
+   // ...also the score...
+    r.push({"Score": 0});
+    // for each of the simulation runs
+    for (var i = 0; i < temp.length; i++) {
+      // add the score
+      r[10]["Score"] += temp[i][10]["Score"];
+    }
+    
+    // ...and then divide to average...
+    for (i = 0; i < r.length; i++){
+      for (var j in r[i]){ //console.log(j);return r;
+        r[i][j] /= sig;
+      }
+    }
+    //console.log(temp);
+    //console.log(r);
+    return r;
   }
   
 }

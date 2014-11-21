@@ -31,8 +31,10 @@ app.get('/', function (req, res){
 
 app.get('/runsim', function(req, res){
   console.log(req.query);
+  var r = simulation.sim(req.query);
+  console.log(r)
   //console.log("1111");
-  res.json(simulation.sim(req.query));
+  res.json(r);
 });
 
 // app.post('/', function (req, res) {
