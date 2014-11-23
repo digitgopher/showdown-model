@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!--
+Simulate MLB Showdown games and give the results!   
+-->
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>MLB Simulation</title>
+    <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> -->
+    <script src="jquery-1.11.1.min.js"></script>
+    
+    <!-- <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css" /> -->
+    <link rel="stylesheet" href="sim.css"/>
+    <!-- <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>-->
+    <script src="sim.js"></script>
+  </head>
+  <body>
+    <img src="banner.png"/>
+    <h1>MLB Form. Client side simulation.</h1>
+    <div id="container"><form id="inputForm"> <!-- Use ajax instead of: action="" method="post" -->
+      <div id="batters">
+        <div class="batter-input">
+          <div>
+            <label for="b1name" class="input-label">Player Name</label>
+            <input type="text" name="b1name" value="Batter 1"/>
+          </div>
+          <div>
+            <div class="chart-select">
+              <label for="b1so" class="input-label">SO</label>
+              <select name="b1"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
+            </div>
+            <div class="chart-select">
+              <label for="b1gb" class="input-label">GB</label>
+              <select name="b1"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
+            </div>
+            <div class="chart-select">
+              <label for="b1fb" class="input-label">FB</label>
+              <select name="b1"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
+            </div>
+            <div class="chart-select">
+              <label for="b11b" class="input-label">1B</label>
+              <select name="b1"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
+            </div>
+            <div class="chart-select">
+              <label for="b11b+" class="input-label">1B+</label>
+              <select name="b11b+"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
+            </div>
+            <div class="chart-select">
+              <label for="b12b" class="input-label">2B</label>
+              <select name="b12b"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
+            </div>
+            <div class="chart-select">
+              <label for="b13b" class="input-label">3B</label>
+              <select name="b13b"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
+            </div>
+            <div class="chart-select">
+              <label for="b1hr" class="input-label">HR</label>
+              <select name="b1hr"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
+            </div>
+          </div>
+          <div>
+            <div class="chart-select">
+              <label for="b1sp" class="input-label">Speed</label>
+              <select name="b1sp"><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15" selected>15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select>
+            </div>
+            <div class="chart-select">
+              <label for="b1pos" class="input-label">Position</label>
+              <select name="b1pos"> <option value="c" selected>C</option><option value="1b">1B</option><option value="2b">2B</option><option value="ss">SS</option><option value="3b">3B</option><option value="of">OF</option><option value="dh">DH</option></select>
+            </div>
+            <div class="chart-select">
+              <label for="b1fld" class="input-label">Fielding</label>
+              <select name="b1fld"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button id="run-simulation" name="run" type="button" value="Run Simulation">Click here</button>
+      <p id="h">Before clicking this shows up</p>
+    </form></div>
+
+</body>
+
+<!--   </body><script>   $('#s').click(function() {
+    $(this).text('idk');//$("#inputForm").value();
+  });</script> -->
+    <!-- <script>$('#submit').click(function(){
+  $.ajax({
+    type: "GET",
+    url: "/runsim",
+    //dataType: "json", // don't need a dataType, default contentType is application/x-www-form-urlencoded
+    data: $("#inputForm").serialize(),
+    cache: false,
+    timeout: 5000,
+    success: function(data) {
+        console.log(data[0].jsonname);
+        
+        console.log(data);
+        var myJSONText = JSON.stringify(data);
+        console.log(myJSONText);
+        $("#submit").val(data[0].jsonname);
+    },
+    error: function(textStatus, errorThrown) {
+        alert('data transmission error');
+    }
+  })
+});
+
+//Don't need????
+$.fn.serializeObject = function()
+{
+    var o = {};
+    var a = this.serializeArray();
+    $.each(a, function() {
+        if (o[this.name] !== undefined) {
+            if (!o[this.name].push) {
+                o[this.name] = [o[this.name]];
+            }
+            o[this.name].push(this.value || '');
+        } else {
+            o[this.name] = this.value || '';
+        }
+    });
+    return o;
+};
+    </script> -->
+</html>

@@ -1,3 +1,9 @@
+$(window).load(function() {
+   $('#run-simulation').on("click", function() {
+   //$("select").each(console.log("dd"));
+    var inputValues = $('#inputForm').serializeArray();
+    $('#h').text(sim(inputValues));
+
 //Requirements:
 //Return the average statistics of the players passed in.
 //  - can be passed either one batter or 9, and only one pitcher
@@ -5,10 +11,12 @@
 
 // Simulates a large number of innings played, and does that 30 times to average the results. 
 function sim(json){
-  // json.name , json["name"] both work
-  var startTime = Date.now();
-  var endTime = Date.now();
-  //return "startTime:"+startTime+",jsonname:"+json.name;
+
+  console.log(json);
+  console.log(json.length);
+  console.log(json[2]);
+  console.log(json[2][name]);
+  console.log(json[2].name);
 
   // Usage
   // Get first batter: batters[0]
@@ -110,7 +118,7 @@ function sim(json){
   // Run the simulation 30 times and then get averages.
   // TODO: Let user input this to tradeoff accuracy for speed
   // 10000 is a good speed/accuracy ratio
-  var sig = 2; // sig = statistically significant
+  var sig = 100; // sig = statistically significant
   for (var a = 0; a < sig; a++){
     // Prepare everything for a simulation
     var bases = [false,false,false]; // Nobody is on base to start with!
@@ -436,6 +444,11 @@ function sim(json){
 }
 
 
-sim(null);
 
-exports.sim = sim;
+
+//console.log(sim(null));
+
+  });
+});
+
+//exports.sim = sim;

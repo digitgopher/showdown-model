@@ -1,5 +1,6 @@
 /* CSS for the Showdown calculator page. */
-div#form1, div#form2{
+
+/* div#form1, div#form2{
 font-family:'Verdana',sans-serif;
 width:500px;
 height:500px;
@@ -11,8 +12,22 @@ float:left;
 text-align:right;
 margin-left:10px;
 margin-top:20px
+} */
+img{
+width:100%;
+max-width: 200px;
+height: auto;
 }
-h3,p{
+.input-label{
+display:block;
+}
+.chart-select{
+display:inline-block;
+}
+.batter-input{
+background-color: lightgreen;
+}
+/* h3,p{
 text-align:center;
 color:#aa2322
 }
@@ -49,4 +64,4 @@ text-shadow:1px 1px 1px gray
 h2{
 color:#bb4555;
 text-shadow:1px 1px 1px gray
-}
+} */
