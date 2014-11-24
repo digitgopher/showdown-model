@@ -64,24 +64,30 @@ $(window).load(function() {
 
 /********* EVERYTHING THAT HAPPENS WHEN THE RUN SIMULATION BUTTON IS CLICKED ***********/
   $('#run-simulation').on("click", function() {
-    //$("select").each(console.log("dd"));
+    // Collect all the input data
     var inputValues = $('#inputForm').serializeArray();
     var batters = [];
     var batter = [];
     var group = [];
     //x.push(inputValues[0].value);
     // The first name parameter we expect
-    var curGroup = 'b1n';
+    var curGroup = 'b1c'; // CHANGE THIS to b1n WHEN NAMES ADDED BACK IN
     var track = 1;
+    var curValue = '';
     // Create a custom data structure
     for (var i = 0; i < inputValues.length; i++){
-      
+      // we want numbers! except for the position, this casts everything to a number
+      curValue = inputValues[i].value;
+      if(!isNaN(curValue)){
+        curValue = Number(curValue);
+      }
+      // do the logics
       if(inputValues[i].name == curGroup){
-        group.push(inputValues[i].value);
+        group.push(curValue);
       }
       else{
         // if the next value is one of a new player (3 groups of values per player: name, chart vals, and other attributes)
-        if(++track % 3 == 1){
+        if(++track % 2 == 1){  // CHANGE THIS from 2 to 3 WHEN NAMES ADDED BACK IN
           // reset the track
           track = 1;
           // add the group to the batter, and batter to batters, and reset for new batter
@@ -90,31 +96,38 @@ $(window).load(function() {
           batter = [];
         }
         else{
-          console.log("sdflaskf");
-          //track++;
           batter.push(group);
         }
         // set new group and add the value
         group = [];
-        group.push(inputValues[i].value);
+        group.push(curValue);
       }
-      console.log(track);
-      console.log(group);
-      console.log(batter);
-      console.log(batters);
-      console.log("--------------------------------------------");
+      // console.log(track);
+      // console.log(group);
+      // console.log(batter);
+      // console.log(batters);
+      // console.log("--------------------------------------------");
       curGroup = inputValues[i].name;
     }
     // Loop exits before finishing the job
     batter.push(group);
     batters.push(batter);
+    // this is a hack until the UI gets 9 batters...
+    batters.push(batter);
+    batters.push(batter);
+    batters.push(batter);
+    batters.push(batter);
+    batters.push(batter);
+    batters.push(batter);
+    batters.push(batter);
 
-    console.log(inputValues);
-    console.log(batters);
+    // Now we have all the input data, see:
+    // console.log(inputValues);
+    // console.log(batters);
     
-    //return;
     
-    $('p').empty().text(sim(inputValues));
+    //$('p').empty().text(sim(inputValues));
+    $('p').empty().text(sim(batters));
 
 
 
@@ -150,6 +163,8 @@ $(window).load(function() {
       [[2,2,2,3,5,1,2,1,2],[8,15,"of",1]],
       [[2,2,2,3,5,1,2,1,2],[8,15,"dh",""]]
     ]
+    console.log(batters);
+    batters = json;
     var bat0Map= {
       0 : "so",
       1 : "gb",
@@ -258,7 +273,7 @@ $(window).load(function() {
       
       
       // We can play as many innings as we want, in multiples of 9 to keep things even.
-      var numGames = 162
+      var numGames = 162;
       for (var i = 1; i <= 9*numGames; i++) {
         var outs = 0;
         // end inning after 3 outs
