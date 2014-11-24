@@ -71,7 +71,7 @@ $(window).load(function() {
     var group = [];
     //x.push(inputValues[0].value);
     // The first name parameter we expect
-    var curGroup = 'b1c'; // CHANGE THIS to b1n WHEN NAMES ADDED BACK IN
+    var curGroup = 'b1c';
     var track = 1;
     var curValue = '';
     // Create a custom data structure
@@ -87,7 +87,7 @@ $(window).load(function() {
       }
       else{
         // if the next value is one of a new player (3 groups of values per player: name, chart vals, and other attributes)
-        if(++track % 2 == 1){  // CHANGE THIS from 2 to 3 WHEN NAMES ADDED BACK IN
+        if(++track % 3 == 1){
           // reset the track
           track = 1;
           // add the group to the batter, and batter to batters, and reset for new batter
@@ -323,6 +323,10 @@ $(window).load(function() {
     // Functions below
     
     function getResultAtBat(){
+      // console.log("**********");
+      // console.log(curBatter);
+      // console.log(batters[curBatter][1]);
+      // console.log(batters[curBatter][0]);
       // Which chart?
       var pitch = Math.ceil(Math.random() * 20);
       if(pitch + pitchers[0][1][0] > batters[curBatter][1][0]){ // pitcher has advantage!
@@ -336,6 +340,7 @@ $(window).load(function() {
     
     function getSwingResult(chart){
       var swing = Math.ceil(Math.random() * 20);
+      //console.log(swing);
       var inc = 0;
       switch(chart){
         case "p":
@@ -365,6 +370,7 @@ $(window).load(function() {
 
     // Also keeps the score
     function advanceRunners(){
+      //console.log(abres);
       switch(abres){
         case "bb":
           bases[0] ? // check if runner on first
