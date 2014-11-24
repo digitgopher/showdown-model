@@ -18,13 +18,19 @@ width:100%;
 max-width: 200px;
 height: auto;
 }
-.input-label{
+/* il stands for input-label */
+.il-n,.il-c,.il-a{
 display:block;
+}
+.il-ob{
+display:block;
+font-weight:bold;
 }
 .chart-select{
 display:inline-block;
 }
 .batter-input{
+display:inline-block;
 background-color: lightgreen;
 }
 /* h3,p{
