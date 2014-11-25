@@ -11,8 +11,12 @@ $(window).load(function() {
       $("select[name="+classname+"]").css("outline", "inherit");
       //$("#run-simulation").prop("disabled",false);
     }
-    else{
-      $("select[name="+classname+"]").css("outline", "1px solid red");
+    else if(sum > 20){
+      $("select[name="+classname+"]").css("outline", "2px solid #CF0000");
+      //$("#run-simulation").prop("disabled",true);
+    }
+    else {
+      $("select[name="+classname+"]").css("outline", "2px solid #FF7D7D");
       //$("#run-simulation").prop("disabled",true);
     }
     console.log(sum);
@@ -49,11 +53,11 @@ $(window).load(function() {
   
   // Add validators
   var individualSum20Listeners = [];
-  var batChartClassNames = ["b1c","b2c"/*,"b3c","b4c","b5c","b6c","b7c","b8c","b9c"*/];
+  var batChartClassNames = ["p1c","b1c","b2c","b3c","b4c","b5c","b6c","b7c","b8c","b9c"];
   for (var i = 0; i < batChartClassNames.length; i++){
     individualSum20Listeners[i] = addchartValidateSum(batChartClassNames[i]);
   }
-  $("select[name='b1c'], select[name='b2c'], select[name='b3c'], select[name='b4c'], select[name='b5c'], select[name='b6c'], select[name='b7c'], select[name='b8c'], select[name='b9c']").change(function() {
+  $("select[name='p1c'], select[name='b1c'], select[name='b2c'], select[name='b3c'], select[name='b4c'], select[name='b5c'], select[name='b6c'], select[name='b7c'], select[name='b8c'], select[name='b9c']").change(function() {
     chartValidateAll(batChartClassNames);
   });
 

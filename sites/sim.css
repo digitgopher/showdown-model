@@ -14,24 +14,42 @@ margin-left:10px;
 margin-top:20px
 } */
 img{
-width:100%;
-max-width: 200px;
-height: auto;
+  width:100%;
+  max-width: 200px;
+  height: auto;
 }
 /* il stands for input-label */
 .il-n,.il-c,.il-a{
-display:block;
+  display:block;
 }
 .il-ob{
-display:block;
-font-weight:bold;
+  display:block;
+  font-weight:bold;
 }
 .chart-select{
-display:inline-block;
+  display:inline-block;
+  padding: 0px;
+  margin: 0px;
 }
 .batter-input{
-display:inline-block;
-background-color: lightgrey;
+  display:inline-block;
+  background-color: #DADCE8;
+  border: 1px solid lightblue;
+}
+.pitcher-input{
+  display:inline-block;
+  background-color: #FABE82;
+  border: 1px solid lightblue;
+}
+.i-n{
+  font-weight:bold;
+}
+div + div{
+  margin: 3px 0px auto 0;
+  
+}
+.results{
+  margin-top: 10px;
 }
 /* h3,p{
 text-align:center;
