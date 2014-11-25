@@ -72,6 +72,8 @@ $(window).load(function() {
     var inputValues = $('#inputForm').serializeArray();
     var batters = [];
     var batter = [];
+    var pitchers = [];
+    var pitcher = [];
     var group = [];
     //x.push(inputValues[0].value);
     // The first name parameter we expect
@@ -113,27 +115,21 @@ $(window).load(function() {
       // console.log("--------------------------------------------");
       curGroup = inputValues[i].name;
     }
-    // Loop exits before finishing the job
-    batter.push(group);
-    batters.push(batter);
-    // this is a hack until the UI gets 9 batters...
-    batters.push(batter);
-    batters.push(batter);
-    batters.push(batter);
-    batters.push(batter);
-    batters.push(batter);
-    batters.push(batter);
-    batters.push(batter);
+    // Loop exits before finishing the job.
+    // This is simply the last player that the loop processed. In the format 
+    // where we have only one pitcher and it happens to be the last player, 
+    // it works out cleanly. In sum: The pitcher being added here is purely
+    // a byproduct of the loop logic combined with form structure AND CAN EASILY
+    // CHANGE SO WATCH IT.
+    
+    batter.push(group); // Finish adding last group
+    pitchers.push(batter); // The hack mentioned above
 
-    // Now we have all the input data, see:
-    // console.log(inputValues);
-    // console.log(batters);
+    // Now we have all the input data, print stuff out to confirm:
     
-    
+    // Run the simulation
     //$('p').empty().text(sim(inputValues));
-    $('p').empty().text(sim(batters));
-
-
+    $('p').empty().text(sim(batters, pitchers));
 
 
   });
@@ -145,9 +141,7 @@ $(window).load(function() {
   //    * passed exactly 9 batters and 1 pitcher. TODO: pass single batter, or multiple pitchers with IP
   //    * return the average number of each result as a percentage of average number of plate appearances
   // The function simulates a large number of innings played, and does that many times to average the results. 
-  function sim(json){
-
-    console.log(json);
+  function sim(batters, pitchers){
 
     // Usage
     // Get first batter: batters[0]
@@ -156,19 +150,20 @@ $(window).load(function() {
     // Note: batter's card attributes are split like this so we can loop through atbat result possibilities
     // Example: batters[curBatter][1][0] == onbase value
     // Using arrays because objects aren't ordered!
-    var batters = [
-      [[2,2,2,3,5,1,2,1,2],[8,15,"c",6]],
-      [[2,2,2,3,5,1,2,1,2],[8,15,"1b",0]],
-      [[2,2,2,3,5,1,2,1,2],[8,15,"2b",3]],
-      [[2,2,2,3,5,1,2,1,2],[8,15,"ss",3]],
-      [[2,2,2,3,5,1,2,1,2],[8,15,"3b",1]],
-      [[2,2,2,3,5,1,2,1,2],[8,15,"of",1]],
-      [[2,2,2,3,5,1,2,1,2],[8,15,"of",1]],
-      [[2,2,2,3,5,1,2,1,2],[8,15,"of",1]],
-      [[2,2,2,3,5,1,2,1,2],[8,15,"dh",""]]
-    ]
+    // Example of how data should be formatted:
+    // var batters = [
+      // [[2,2,2,3,5,1,2,1,2],[8,15,"c",6]],
+      // [[2,2,2,3,5,1,2,1,2],[8,15,"1b",0]],
+      // [[2,2,2,3,5,1,2,1,2],[8,15,"2b",3]],
+      // [[2,2,2,3,5,1,2,1,2],[8,15,"ss",3]],
+      // [[2,2,2,3,5,1,2,1,2],[8,15,"3b",1]],
+      // [[2,2,2,3,5,1,2,1,2],[8,15,"of",1]],
+      // [[2,2,2,3,5,1,2,1,2],[8,15,"of",1]],
+      // [[2,2,2,3,5,1,2,1,2],[8,15,"of",1]],
+      // [[2,2,2,3,5,1,2,1,2],[8,15,"dh",""]]
+    // ]
     console.log(batters);
-    batters = json;
+    console.log(pitchers);
     var bat0Map= {
       0 : "so",
       1 : "gb",
@@ -198,10 +193,10 @@ $(window).load(function() {
       2 : "pos",
       3 : "f"
     }
-    
-    var pitchers = [
-      [[2,5,5,4,2,1,1,0],[4,""]]
-    ]
+    // Example pitchers data:
+    // var pitchers = [
+      // [[2,5,5,4,2,1,1,0],[4,""]]
+    // ]
     var pit0Map= {
       0 : "pu",
       1 : "so",
