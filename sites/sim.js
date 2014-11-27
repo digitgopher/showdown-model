@@ -127,10 +127,45 @@ $(window).load(function() {
 
     // Now we have all the input data, print stuff out to confirm:
     
-    // Run the simulation
-    //$('p').empty().text(sim(inputValues));
-    $('p').empty().text(sim(batters, pitchers));
-
+    // Run the simulation and get results
+    var results = $.parseJSON(sim(batters, pitchers));
+    var score = results.pop();
+    var presult = results.pop();
+    // console.log(results);
+    // console.log(presult);
+    // console.log(score);
+    
+    // Display score
+    var scorehtml = "Average number of runs <strong>this</strong> team will score agains <strong>this</strong> pitcher in a 9 inning game: <div class=\"score-val\">"+ score["Score"] + "</div>";
+    $(".score-results").empty().html(scorehtml);
+    
+    // Build batter results
+    // TODO: un-hardcode the titles in all the table headings...
+    var btbl = "<table><colgroup><col class=\"out-cols\" span=\"3\"><col class=\"ob-cols\" span=\"6\"><col class=\"obp-col\"></colgroup><tr><th>SO</th><th>GB</th><th>FB</th><th>BB</th><th>1B</th><th>1B+</th><th>2B</th><th>3B</th><th>HR</th><th>OBP</th></tr>";
+    var odd_even = false;
+    $.each(results, function() {
+      var tbl_row = "";
+      $.each(this, function(k , v) {
+          tbl_row += "<td>"+v+"</td>";
+      })
+      btbl += "<tr class=\""+( odd_even ? "odd" : "even")+"\">"+tbl_row+"</tr>";
+      odd_even = !odd_even;
+    });
+    btbl += "</table>";
+    console.log(btbl);
+    // Display batter results
+    $(".bat-results").empty().html(btbl);
+    
+    // Build single pitcher results
+    var ptbl = "<table><colgroup><col class=\"out-cols\" span=\"4\"><col class=\"ob-cols\" span=\"4\"><col class=\"obp-col\"></colgroup><tr><th>PU</th><th>SO</th><th>GB</th><th>FB</th><th>BB</th><th>1B</th><th>2B</th><th>HR</th><th>OBP</th></tr>";
+    var tbl_row = "";
+    $.each(presult, function(k , v) {
+      return tbl_row += "<td>"+v+"</td>";
+    });
+    ptbl += "<tr>"+tbl_row+"</tr></table>";
+    // Display pitcher results
+    $(".pit-results").empty().html(ptbl);
+    
 
   });
   
@@ -162,8 +197,8 @@ $(window).load(function() {
       // [[2,2,2,3,5,1,2,1,2],[8,15,"of",1]],
       // [[2,2,2,3,5,1,2,1,2],[8,15,"dh",""]]
     // ]
-    console.log(batters);
-    console.log(pitchers);
+    // console.log(batters);
+    // console.log(pitchers);
     var bat0Map= {
       0 : "so",
       1 : "gb",
@@ -312,12 +347,21 @@ $(window).load(function() {
       //console.log("Simulation results: ");
     
     }
+
     //console.log(temp);
     // true flag means 9 batters, false means one
     results = averageResults(true); // to contain all results of simulation as json to be displayed in browser
-    return JSON.stringify(results);
-    
+    //console.log(results);
+    return JSON.stringify(results, function(key, val) {
+      return val.toFixed ? Number(val).toFixed(4).replace(/^0+/, '') : val;
+    });
     // End simulation logic
+    
+    
+    
+    
+    
+    
     //*********************
     // Functions below
     
