@@ -1,17 +1,7 @@
 /* CSS for the Showdown calculator page. */
 
 /* div#form1, div#form2{
-font-family:'Verdana',sans-serif;
-width:500px;
-height:500px;
-border:2px solid #456321;
-padding:10px;
-background-color:#f3f3f3;
-border-radius:3px;
-float:left;
-text-align:right;
-margin-left:10px;
-margin-top:20px
+
 } */
 img{
   width:100%;
@@ -48,9 +38,51 @@ div + div{
   margin: 3px 0px auto 0;
   
 }
-.results{
+#run-simulation{
+  margin:10px 0 10px 0;
+  padding:5px;
+  font-size:1.3em;
+}
+.results-before{
+  margin-top: 10px;
+  color: #D6D6D6;
+  font: italic small-caps 100 48px/2 sans-serif;
+  vertical-align: middle;
+  width:90%;
+  background-color:#FFFBDB;
+  height:200px;
+  border:2px solid #DBDFFF;
+  border-radius:20px;
+  text-align:center;
+  margin: 10px auto 0 auto;
+  /*float:right;*/
+  /*padding:10px;*/
+}
+.results-after{
   margin-top: 10px;
 }
+.score-results{
+  margin-top: 10px;
+}
+.bat-results{
+  margin-top: 10px;
+}
+.pit-results{
+  margin-top: 10px;
+}
+table{
+
+}
+thead{
+
+}
+tr{
+
+}
+td{
+
+}
+
 /* h3,p{
 text-align:center;
 color:#aa2322
@@ -62,14 +94,6 @@ padding:5px;
 height:40px;
 box-shadow:1px 1px 1px 1px gray;
 border-radius:5px
-}
-input#submit{
-margin:10px 15px 10px 0;
-padding:5px;
-background-color:#3fb8e8;
-box-shadow:0 3px 0 0 #6776ba;
-border-radius:5px;
-font-size:20px
 }
 textarea{
 margin:10px 0;

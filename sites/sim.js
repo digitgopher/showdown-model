@@ -135,13 +135,18 @@ $(window).load(function() {
     // console.log(presult);
     // console.log(score);
     
+    // Prep display
+    $(".results-before").contents().filter(function(){ return this.nodeType == 3; }).remove();
+    $(".results-before").addClass('results-after');
+    $(".results-before").removeClass('results-before');
+    
     // Display score
     var scorehtml = "Average number of runs <strong>this</strong> team will score agains <strong>this</strong> pitcher in a 9 inning game: <div class=\"score-val\">"+ score["Score"] + "</div>";
     $(".score-results").empty().html(scorehtml);
     
     // Build batter results
     // TODO: un-hardcode the titles in all the table headings...
-    var btbl = "<table><colgroup><col class=\"out-cols\" span=\"3\"><col class=\"ob-cols\" span=\"6\"><col class=\"obp-col\"></colgroup><tr><th>SO</th><th>GB</th><th>FB</th><th>BB</th><th>1B</th><th>1B+</th><th>2B</th><th>3B</th><th>HR</th><th>OBP</th></tr>";
+    var btbl = "<table><colgroup><col class=\"out-cols\" span=\"3\"><col class=\"ob-cols\" span=\"6\"><col class=\"obp-col\"></colgroup><thead><th>SO</th><th>GB</th><th>FB</th><th>BB</th><th>1B</th><th>1B+</th><th>2B</th><th>3B</th><th>HR</th><th>OBP</th></thead>";
     var odd_even = false;
     $.each(results, function() {
       var tbl_row = "";
@@ -157,7 +162,7 @@ $(window).load(function() {
     $(".bat-results").empty().html(btbl);
     
     // Build single pitcher results
-    var ptbl = "<table><colgroup><col class=\"out-cols\" span=\"4\"><col class=\"ob-cols\" span=\"4\"><col class=\"obp-col\"></colgroup><tr><th>PU</th><th>SO</th><th>GB</th><th>FB</th><th>BB</th><th>1B</th><th>2B</th><th>HR</th><th>OBP</th></tr>";
+    var ptbl = "<table><colgroup><col class=\"out-cols\" span=\"4\"><col class=\"ob-cols\" span=\"4\"><col class=\"obp-col\"></colgroup><thead><th>PU</th><th>SO</th><th>GB</th><th>FB</th><th>BB</th><th>1B</th><th>2B</th><th>HR</th><th>OBP</th></thead>";
     var tbl_row = "";
     $.each(presult, function(k , v) {
       return tbl_row += "<td>"+v+"</td>";
