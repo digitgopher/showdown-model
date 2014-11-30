@@ -67,18 +67,19 @@ $(window).load(function() {
   batChartClassNames = ["p1c","b1c","b2c","b3c","b4c","b5c","b6c","b7c","b8c","b9c"];
   setValidation(9,individualSum20Listeners,batChartClassNames);
   
-  // Update validators as needed
-  // $(".num-bat-rad").change(function() {
-    // if ($('.num-bat-rad:checked').val() == 1) {
-      
-    // }
-    // else if ($('.num-bat-rad:checked').val() == 9) {
-      
-    // }
-    // else {
-      // console.error("Radio button select value error.");
-    // }
-  // });
+  // Change form on radio buttons
+  $(".num-bat-rad").change(function() {
+    if ($('.num-bat-rad:checked').val() == 1) {
+      $(".last-eight-batters").hide();
+      // TODO: Update validators as needed
+    }
+    else if ($('.num-bat-rad:checked').val() == 9) {
+      $(".last-eight-batters").show();
+    }
+    else {
+      console.error("Radio button select value error.");
+    }
+  });
   
   // Add the validator to a single group:
   // $("select[name='b1c']").change(function() {
@@ -144,6 +145,19 @@ $(window).load(function() {
     batter.push(group); // Finish adding last group
     batters.push(batter);
     pitchers.push(batters.shift());
+    // If only the first is input and the simulation is to be run against that batter only, then fill'er up with batter[0]!
+    if ($('.num-bat-rad:checked').val() != 9){
+      if ($('.num-bat-rad:checked').val() == 1){
+        batters = new Array(batters.shift());
+        for (var i = 1; i <= 8; i++) {
+          batters.push(batters[0]);
+        }
+      }
+      else {
+        console.error("Again, radio button is not set to either 9 or 1.");
+      }
+    }
+    
     // console.log(batters);
     // console.log(pitchers);
     // return;
@@ -180,7 +194,7 @@ $(window).load(function() {
       odd_even = !odd_even;
     });
     btbl += "</table>";
-    console.log(btbl);
+    //console.log(btbl);
     // Display batter results
     $(".bat-results").empty().html(btbl);
     
