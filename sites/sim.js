@@ -51,16 +51,35 @@ $(window).load(function() {
     //console.log(sum);
   }
   
-  // Add validators
-  var individualSum20Listeners = [];
-  var batChartClassNames = ["p1c","b1c","b2c","b3c","b4c","b5c","b6c","b7c","b8c","b9c"];
-  for (var i = 0; i < batChartClassNames.length; i++){
-    individualSum20Listeners[i] = addchartValidateSum(batChartClassNames[i]);
+  // Add validators as needed
+  function setValidation(numBatters,individualSum20Listeners,batChartClassNames){
+    for (var i = 0; i < batChartClassNames.length; i++){
+      individualSum20Listeners[i] = addchartValidateSum(batChartClassNames[i]);
+    }
+    $("select[name='p1c'], select[name='b1c'], select[name='b2c'], select[name='b3c'], select[name='b4c'], select[name='b5c'], select[name='b6c'], select[name='b7c'], select[name='b8c'], select[name='b9c']").change(function() {
+      chartValidateAll(batChartClassNames);
+    });
   }
-  $("select[name='p1c'], select[name='b1c'], select[name='b2c'], select[name='b3c'], select[name='b4c'], select[name='b5c'], select[name='b6c'], select[name='b7c'], select[name='b8c'], select[name='b9c']").change(function() {
-    chartValidateAll(batChartClassNames);
-  });
 
+  // Initialize validators
+  // Making them global on purpose so they can be deleted and reset
+  individualSum20Listeners = [];
+  batChartClassNames = ["p1c","b1c","b2c","b3c","b4c","b5c","b6c","b7c","b8c","b9c"];
+  setValidation(9,individualSum20Listeners,batChartClassNames);
+  
+  // Update validators as needed
+  // $(".num-bat-rad").change(function() {
+    // if ($('.num-bat-rad:checked').val() == 1) {
+      
+    // }
+    // else if ($('.num-bat-rad:checked').val() == 9) {
+      
+    // }
+    // else {
+      // console.error("Radio button select value error.");
+    // }
+  // });
+  
   // Add the validator to a single group:
   // $("select[name='b1c']").change(function() {
     // chartValidateSum("b1c");
@@ -77,7 +96,7 @@ $(window).load(function() {
     var group = [];
     //x.push(inputValues[0].value);
     // The first name parameter we expect
-    var curGroup = 'b1c';
+    var curGroup = 'p1c';
     var track = 1;
     var curValue = '';
     // Create a custom data structure
@@ -118,12 +137,16 @@ $(window).load(function() {
     // Loop exits before finishing the job.
     // This is simply the last player that the loop processed. In the format 
     // where we have only one pitcher and it happens to be the last player, 
-    // it works out cleanly. In sum: The pitcher being added here is purely
+    // it works out cleanly. In sum: The player being added here is purely
     // a byproduct of the loop logic combined with form structure AND CAN EASILY
     // CHANGE SO WATCH IT.
     
     batter.push(group); // Finish adding last group
-    pitchers.push(batter); // The hack mentioned above
+    batters.push(batter);
+    pitchers.push(batters.shift());
+    // console.log(batters);
+    // console.log(pitchers);
+    // return;
 
     // Now we have all the input data, print stuff out to confirm:
     
@@ -286,7 +309,7 @@ $(window).load(function() {
     // Run the simulation 30 times and then get averages.
     // TODO: Let user input this to tradeoff accuracy for speed
     // 10000 is a good speed/accuracy ratio
-    var sig = 100; // sig = statistically significant
+    var sig = 1000; // sig = statistically significant
     for (var a = 0; a < sig; a++){
       // Prepare everything for a simulation
       var bases = [false,false,false]; // Nobody is on base to start with!

@@ -30,12 +30,19 @@ img{
   display:inline-block;
   background-color: #FABE82;
   border: 1px solid lightblue;
+  margin-right: 45px; 
 }
 .i-n{
   font-weight:bold;
 }
 div + div{
   margin: 3px 0px auto 0;
+  
+}
+.run{
+  background-color: #FFFFBF;
+}
+.num-bat-rad{
   
 }
 #run-simulation{
