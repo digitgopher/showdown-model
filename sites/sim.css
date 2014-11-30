@@ -1,12 +1,12 @@
 /* CSS for the Showdown calculator page. */
 
-/* div#form1, div#form2{
-
-} */
 img{
   width:100%;
   max-width: 200px;
   height: auto;
+}
+p{
+  
 }
 /* il stands for input-label */
 .il-n,.il-c,.il-a{
@@ -89,34 +89,3 @@ tr{
 td{
 
 }
-
-/* h3,p{
-text-align:center;
-color:#aa2322
-}
-input{
-width:100%;
-margin:10px 0;
-padding:5px;
-height:40px;
-box-shadow:1px 1px 1px 1px gray;
-border-radius:5px
-}
-textarea{
-margin:10px 0;
-padding:5px;
-box-shadow:5px 1px 1px 1px gray;
-border-radius:5px
-}
-div#container{
-margin:50px auto;
-width:960px
-}
-h1{
-color:#bbbaa1;
-text-shadow:1px 1px 1px gray
-}
-h2{
-color:#bb4555;
-text-shadow:1px 1px 1px gray
-} */
