@@ -49,7 +49,15 @@ while($row = $p_result->fetch_array(MYSQLI_ASSOC)){
 
 // Customize arguments for R script as follows:
 // dbUser dbpw function iterations
-$RScriptCmdArgs = $argv[1].' '.$argv[2].' discrete 100';
+$type = "discrete";
+$rscript_count = '1000';
+if(isset($argv[3])){
+    $type = $argv[3];
+}
+if(isset($argv[4])){
+    $rscript_count = $argv[4];
+}
+$RScriptCmdArgs = $argv[1].' '.$argv[2].' '.$type.' '.$rscript_count;
 $cmd = $pathToRExecutable.' '.dirname(__FILE__).'\..\r\script.R'.' '.$RScriptCmdArgs;
 echo "\n***\nPassing R script the args: ".$RScriptCmdArgs."\n***\n";
 exec($cmd, $json);
@@ -90,15 +98,17 @@ if(isset($argv[3]) && $argv[3] == true){
 else{
     echo "\n***\nPassing a single average player.\n***\n";;
 }
-$bCards = playersToCards($batters, 'b', $avgPitchingOpponent);
-//print_r($batCards);
-print_r(getCardAverages($bCards));
+//print_r($batters);
+//print_r($avgPitchingOpponent);exit;
+//$bCards = playersToCards($batters, 'b', $avgPitchingOpponent);
+//print_r($bCards);exit;
+//print_r(getCardAverages($bCards));
 
 $pCards = playersToCards($pitchers, 'p', $avgBattingOpponent);
 //print_r($batCards);
-print_r(getCardAverages($pCards));
+//print_r(getCardAverages($pCards));
 
-print_r(averageMetaOnbase(getCardAverages($bCards),getCardAverages($pCards)));
+//print_r(averageMetaOnbase(getCardAverages($bCards),getCardAverages($pCards)));
 
 $mysqli->close();
 
@@ -135,9 +145,16 @@ function playersToCards($players, $type, $avgOpp){
             }
             $diffs[$index] = array_sum($d);
         }
-        //print_r($diffs);
+        //print_r($diffs); 
+        //$rr[0] = $result[1];print_r(getCardAverages($rr)); // Example of working syntax
+        //print_r($result[17]);exit();
+        print_r($player->computePercentDifferent(PitcherFormula::processChart($result[17]), $avgOpp));exit;
+        // Add results to each other, then in the end average through the number of simulations run (~1000),
+        // then go on to picking the correct diffs value and make card.
+        
         //$batCards[0] = (BatterFormula::processChart($batResult[array_search(min($diffs),$diffs)]));
         $cards[$num] = ($result[array_search(min($diffs),$diffs)]);
+        //print_r($cards);exit;
         //print_r($batCards[$num]);
     }
     return $cards;

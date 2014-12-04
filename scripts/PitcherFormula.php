@@ -17,10 +17,13 @@ class PitcherFormula
     //  - If more than 20 possible results, 
     //  - Return formatted chart
     //
-    //
-    public function processChart($chart){
+    // If second parameter set to true, a rendered version of the chart is
+    // returned. By default, the number of slots is returned.
+    public function processChart($chart, $prettify=false){
         $chart = self::roundChart($chart);
-        $chart = self::prettifyChart($chart);
+        if($prettify){
+            $chart = self::prettifyChart($chart);
+        }
         return $chart;
     }
     
@@ -326,6 +329,54 @@ class PitcherFormula
         $p_result = (400*$metric + $PA*$b_result*($pC-$OB))/($PA*($pC-$OB + 20));
         // Negative means the average batter needs to be worse!
         return $p_result;
+    }
+    
+    // Built to take a representative sample of batters, the game calculations all depend on the selection of batters!
+    function computePercentDifferent($pitcher, $batters){
+        // Copied from above
+        $batted_outs = $this->real['AB'] - $this->real['SO'] - $this->real['H'];
+        $GBouts_tot = $this->real['G/F']*$batted_outs/(1+$this->real['G/F']);
+        $f = $batted_outs - $GBouts_tot;// Split fly outs into FB and PU
+        $PUouts_tot = $f*$this->real['PUpct'];
+        $FBouts_tot = $f - $PUouts_tot;
+        // Again, using the formula:
+        // realLifeCount / plateApperances = chance of batters chart * chance of getting that result on batters chart + chance of pitchers chart * chance of getting that result on pitchers chart
+//        print_r($pitcher);
+//        print_r($batters);
+//        print_r($this->real);
+        // Define all 3 at once
+        $diffs = $reals = $calcs = array_fill_keys(array_keys($pitcher), 0);
+        //print_r($calcs);
+        // Get $reals = real life statistics
+        $reals['C'] = $this->real['OBP'];
+        $reals['PU'] = $PUouts_tot / $this->real['PA'];
+        $reals['SO'] = $this->real['SO'] / $this->real['PA'];
+        $reals['GB'] = $GBouts_tot / $this->real['PA'];
+        $reals['FB'] = $FBouts_tot / $this->real['PA'];
+        $reals['BB'] = $this->real['BB'] / $this->real['PA'];
+        $reals['1B'] = $this->real['1B'] / $this->real['PA'];
+        $reals['2B'] = ($this->real['2B'] + $this->real['3B']) / $this->real['PA'];// Triples counted as doubles
+        $reals['HR'] = $this->real['HR'] / $this->real['PA'];
+        // Get $calcs = game statistics, average performance over all the pitchers
+        for ($index = 0; $index < count($batters['OB']); $index++) {
+            $calcs['C'] += ($batters['OB'][$index]-$pitcher['C'])/20 * ($batters['BB'][$index]+$batters['1B'][$index]+$batters['1B+'][$index]+$batters['2B'][$index]+$batters['3B'][$index]+$batters['HR'][$index])/20 + (20-($batters['OB'][$index]-$pitcher['C']))/20*($pitcher['BB']+$pitcher['1B']+$pitcher['2B']+$pitcher['HR'])/20;
+            $calcs['PU'] += (20-($batters['OB'][$index]-$pitcher['C']))/20*$pitcher['PU']/20;  
+            $calcs['SO'] += ($batters['OB'][$index]-$pitcher['C'])/20 * $batters['SO'][$index]/20 + (20-($batters['OB'][$index]-$pitcher['C']))/20*$pitcher['SO']/20;  
+            $calcs['GB']  += ($batters['OB'][$index]-$pitcher['C'])/20 * $batters['GB'][$index]/20 + (20-($batters['OB'][$index]-$pitcher['C']))/20*$pitcher['GB']/20; 
+            $calcs['FB'] += ($batters['OB'][$index]-$pitcher['C'])/20 * $batters['FB'][$index]/20 + (20-($batters['OB'][$index]-$pitcher['C']))/20*$pitcher['FB']/20; 
+            $calcs['BB'] += ($batters['OB'][$index]-$pitcher['C'])/20 * $batters['BB'][$index]/20 + (20-($batters['OB'][$index]-$pitcher['C']))/20*$pitcher['BB']/20;  
+            $calcs['1B'] += ($batters['OB'][$index]-$pitcher['C'])/20 * ($batters['1B'][$index] + $batters['1B+'][$index]/2)/20 + (20-($batters['OB'][$index]-$pitcher['C']))/20*$pitcher['1B']/20;
+            $calcs['2B'] += ($batters['OB'][$index]-$pitcher['C'])/20 * ($batters['2B'][$index] + $batters['1B+'][$index]/2 + $batters['3B'][$index])/20 + (20-($batters['OB'][$index]-$pitcher['C']))/20*$pitcher['2B']/20;
+            $calcs['HR'] += ($batters['OB'][$index]-$pitcher['C'])/20 * $batters['HR'][$index]/20 + (20-($batters['OB'][$index]-$pitcher['C']))/20*$pitcher['HR']/20;  
+        }
+        foreach ($calcs as $key => &$value) {
+            $value /= count($batters['OB']);// Represents number of batters
+        }
+        // Get $diffs = difference between reals and calcs
+        foreach ($diffs as $key => &$value) {
+            $value = abs(($reals[$key] - $calcs[$key]) / ($reals[$key] > 0 ? $reals[$key] : INF));
+        }
+        return $diffs;
     }
 
 }
