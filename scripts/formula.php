@@ -100,12 +100,12 @@ else{
 }
 //print_r($batters);
 //print_r($avgPitchingOpponent);exit;
-//$bCards = playersToCards($batters, 'b', $avgPitchingOpponent);
-//print_r($bCards);exit;
+$bCards = playersToCards($batters, 'b', $avgPitchingOpponent);
+print_r($bCards);
 //print_r(getCardAverages($bCards));
 
 $pCards = playersToCards($pitchers, 'p', $avgBattingOpponent);
-//print_r($batCards);
+print_r($pCards);
 //print_r(getCardAverages($pCards));
 
 //print_r(averageMetaOnbase(getCardAverages($bCards),getCardAverages($pCards)));
@@ -133,29 +133,25 @@ function playersToCards($players, $type, $avgOpp){
     // Get card of all batters
     foreach ($players as $num => $player) {
         $diffs = array();
+        $difsums = array();
         $result = array();
-        // See which number of outs on the card is the best fit
+        // Loop through number of outs on the card to find ideal amount
         for ($index = $minNumOuts; $index <= $maxNumOuts; $index++) {
             $result[$index] = $player->getRawCard($avgOpp, $index);
-            $d = $result[$index];
-            foreach ($result[$index] as $key => $value) {
-                $r = round($value);
-                // Give OB/C increased weight (why?)
-                $key == $ob_ctrl ? $d[$key] = $value < $r ? ($r - $value)*2 : ($value - $r)*2 : $d[$key] = $value < $r ? $r - $value : $value - $r;
-            }
-            $diffs[$index] = array_sum($d);
+            array_key_exists("C", $result[$index]) ? 
+                    $diffs[$index] = $player->computePercentDifferent(PitcherFormula::processChart($result[$index]), $avgOpp):
+                    $diffs[$index] = $player->computePercentDifferent(BatterFormula::processChart($result[$index]), $avgOpp);
         }
-        //print_r($diffs); 
-        //$rr[0] = $result[1];print_r(getCardAverages($rr)); // Example of working syntax
-        //print_r($result[17]);exit();
-        print_r($player->computePercentDifferent(PitcherFormula::processChart($result[17]), $avgOpp));exit;
-        // Add results to each other, then in the end average through the number of simulations run (~1000),
-        // then go on to picking the correct diffs value and make card.
-        
-        //$batCards[0] = (BatterFormula::processChart($batResult[array_search(min($diffs),$diffs)]));
-        $cards[$num] = ($result[array_search(min($diffs),$diffs)]);
-        //print_r($cards);exit;
-        //print_r($batCards[$num]);
+        $index--; // get back to a usable value!
+        $difsums = array();
+        foreach ($diffs as $key => $value) {
+            // TODO: make this more accurate
+            $difsums[$key] = array_sum($value);
+        }
+        // Get card with least error and add it to be returned
+        $cards[$num] = array_key_exists("C", $result[$index]) ? 
+                    $diffs[$index] = PitcherFormula::processChart($result[array_search(min($difsums),$difsums)]):
+                    $diffs[$index] = BatterFormula::processChart($result[array_search(min($difsums),$difsums)]);
     }
     return $cards;
 }
