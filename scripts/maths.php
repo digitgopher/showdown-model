@@ -66,3 +66,210 @@ function averageMetaOnbase($b_avgs,$p_avgs){// $setOfAvgs = [getCardAverages($pC
 function sd_sum($values){
     return sqrt(array_sum(array_map("sd_square", $values, array_fill(0,count($values),0))));
 }
+
+
+// Process a raw chart:
+//  - Round each value
+//  - If less than 20 possible results, find the most off value(s) to add. For
+//      batters, give preference to adding in 1B+ results.
+//  - If more than 20 possible results, find the most off value(s) to reduce.
+//  - Return chart in the chosen format
+//
+// If second parameter set to true, a rendered version of the chart is
+// returned. By default, the number of slots is returned.
+function processChart($chart, $renderAsCard=false){
+    // Calculating $chart type here is just easier than in each method
+    $firstKey = array_key_exists("C", $chart) ? "C" : "OB";
+    $chart = roundChart($chart, $firstKey);
+    if($renderAsCard){
+        $chart = prettifyChart($chart, $firstKey);
+    }
+    return $chart;
+}
+
+function roundChart($chart, $firstKey){
+    // Round
+    $temp = array();
+    foreach ($chart as $key => $value) {
+        $temp[$key] = round($value);
+    }
+    
+    $count = array_sum($temp) - $temp[$firstKey];
+
+    // Deal with the rounding not adding up to 20
+    $num_over_20 = $count - 20;
+    switch($num_over_20){
+        case 0:
+            // Rounded to 20 as expected. Nice.
+            break;
+        case -1:
+            // Give 1B+ if single and double values allow for it, else find the most appropriate value to add to
+            $singlesOff = $doublesOff = 0;
+            if($firstKey == 'OB'){
+                $singlesOff = abs($temp['1B'] - $chart['1B']);
+                $doublesOff = abs($temp['2B'] - $chart['2B']);
+            }
+            if($singlesOff + $doublesOff > .3){
+                $temp['1B+']++;
+            }
+            else{
+                $curVal = 0;
+                $curKey = '';
+                foreach ($chart as $key => $value) {
+                    if($key == $firstKey){
+                        continue;
+                    }
+                    if($value > round($value)){ // Only care if we are rounding down by default...
+                        if($value - round($value) > $curVal){
+                            $curVal = $value - round($value);
+                            $curKey = $key;
+                        }
+                    }
+                }
+                $temp[$curKey]++;
+            }
+            break;
+        case -2:
+            // Give 1B+ if single and double values allow for it, else find the most appropriate value to add to
+            $singlesOff = $doublesOff = 0;
+            if($firstKey == 'OB'){
+                $singlesOff = abs($temp['1B'] - $chart['1B']);
+                $doublesOff = abs($temp['2B'] - $chart['2B']);
+            }
+            if($singlesOff + $doublesOff > .6){
+                $temp['1B+'] += 2;
+            }
+            elseif($singlesOff + $doublesOff > .3){
+                $temp['1B+']++;
+                $curVal = 0;
+                $curKey = '';
+                foreach ($chart as $key => $value) {
+                    if($key == $firstKey){
+                        continue;
+                    }
+                    if($value > round($value)){ // Only care if we are rounding down by default...
+                        if($value - round($value) > $curVal){
+                            $curVal = $value - round($value);
+                            $curKey = $key;
+                        }
+                    }
+                }
+                $temp[$curKey]++;
+            }
+            else{
+                // Add 1 to the two 'most off' values
+                $curVal = 0;
+                $curKey = '';
+                // Find first value that is most off
+                foreach ($chart as $key => $value) {
+                    if($key == $firstKey){
+                        continue;
+                    }
+                    if($value > round($value)){ // Only care if we are rounding down by default...
+                        if($value - round($value) > $curVal){
+                            $curVal = $value - round($value);
+                            $curKey = $key;
+                        }
+                    }
+                }
+                $temp[$curKey]++;
+                $curVal = 0;
+                $markedKey = $curKey;
+                $curKey = '';
+                // Find the second most off value
+                foreach ($chart as $key => $value) {
+                    if($key == $firstKey || $key == $markedKey){
+                        continue;
+                    }
+                    if($value > round($value)){ // Only care if we are rounding down by default...
+                        if($value - round($value) > $curVal){
+                            $curVal = $value - round($value);
+                            $curKey = $key;
+                        }
+                    }
+                }
+                $temp[$curKey]++;
+            }
+            break;
+        case 1:
+            $curVal = 0;
+            $curKey = '';
+            foreach ($chart as $key => $value) {
+                if($key == $firstKey){
+                    continue;
+                }
+                if($value < round($value)){ // Only care if we are rounding up by default...
+                    if(round($value) - $value > $curVal){
+                        $curVal = round($value) - $value;
+                        $curKey = $key;
+                    }
+                }
+            }
+            $temp[$curKey]--;
+            break;
+        case 2:
+            // Subtract 1 from the two 'most off' values
+            $curVal = 0;
+            $curKey = '';
+            // Find the first value that is 'most off'
+            foreach ($chart as $key => $value) {
+                if($key == $firstKey){
+                    continue;
+                }
+                if($value < round($value)){ // Only care if we are rounding up by default...
+                    if(round($value) - $value > $curVal){
+                        $curVal = round($value) - $value;
+                        $curKey = $key;
+                    }
+                }
+            }
+            $temp[$curKey]--;
+            $curVal = 0;
+            $markedKey = $curKey;
+            $curKey = '';
+            // Find the second value that is 'most off'
+            foreach ($chart as $key => $value) {
+                if($key == $firstKey || $key == $markedKey){
+                    continue;
+                }
+                if($value < round($value)){ // Only care if we are rounding up by default...
+                    if(round($value) - $value > $curVal){
+                        $curVal = round($value) - $value;
+                        $curKey = $key;
+                    }
+                }
+            }
+            $temp[$curKey]--;
+            break;
+        default:
+            echo "Shouln't get here EVERRRRRR!! Count value = ".$count."\n";
+    }
+    return $temp;
+}
+
+function prettifyChart($chart, $firstKey){
+    // Convert to printable format for output
+    $formatedChart = array();
+    $old_val = "0";
+    foreach ($chart as $key => $value) {
+        if($key == $firstKey){
+            $formatedChart[$key] = $value;
+            continue;
+        }
+
+        if(($value + $old_val) > $old_val + 1){
+            $formatedChart[$key] = ($old_val + 1)." - ".($value + $old_val);
+            $old_val += $value;
+        }
+        elseif(($value + $old_val) == $old_val + 1){
+            $formatedChart[$key] = ($value + $old_val);
+            $old_val += $value;
+        }
+        else{
+            $formatedChart[$key] = "-";
+        }
+
+    }
+
+    return $formatedChart;
+}

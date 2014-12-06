@@ -134,9 +134,7 @@ function playersToCards($players, $type, $avgOpp){
         // Loop through number of outs on the card to find ideal amount
         for ($index = $minNumOuts; $index <= $maxNumOuts; $index++) {
             $result[$index] = $player->getRawCard($avgOpp, $index);
-            array_key_exists("C", $result[$index]) ? 
-                    $diffs[$index] = $player->computePercentDifferent(PitcherFormula::processChart($result[$index]), $avgOpp):
-                    $diffs[$index] = $player->computePercentDifferent(BatterFormula::processChart($result[$index]), $avgOpp);
+            $diffs[$index] = $player->computePercentDifferent(processChart($result[$index]), $avgOpp);
         }
         $index--; // get back to a usable value!
         $difsums = array();
@@ -145,9 +143,7 @@ function playersToCards($players, $type, $avgOpp){
             $difsums[$key] = array_sum($value);
         }
         // Get card with least error and add it to be returned
-        $cards[$num] = array_key_exists("C", $result[$index]) ? 
-                    $diffs[$index] = PitcherFormula::processChart($result[array_search(min($difsums),$difsums)]):
-                    $diffs[$index] = BatterFormula::processChart($result[array_search(min($difsums),$difsums)]);
+        $cards[$num] = processChart($result[array_search(min($difsums),$difsums)]);
     }
     return $cards;
 }
