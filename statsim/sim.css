@@ -1,5 +1,22 @@
 /* CSS for the Showdown calculator page. */
 
+h1, h2, h3, p, ul, li, div{
+  font-family: "Open Sans";
+}
+
+ul{
+  font-size: 13px;
+}
+
+p{
+  font-size: 15px;
+}
+
+a{
+  text-decoration: none;
+  color:#66c63f;
+}
+
 img{
   width:100%;
   max-width: 200px;
@@ -31,9 +48,9 @@ p{
   border: 1px solid lightblue;
 }
 .pitcher-input{
-  display:inline-block;
+  display:block;
   background-color: #FABE82;
-  border: 1px solid lightblue;
+  padding: 
   margin-right: 45px; 
 }
 .i-n{
