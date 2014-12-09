@@ -38,6 +38,14 @@ margin-right: auto;
 p{
   
 }
+
+.paragraph-block{
+  max-width: 1080px;
+  min-width: 450px;
+  width: 100%;
+  padding: 10px;
+  margin: 25px auto 25px auto;
+}
 /* il stands for input-label */
 .il-n,.il-c,.il-a{
   display:block;
@@ -65,8 +73,10 @@ p{
   color: #fff;
   font-weight: 300;
   padding: 10px;
-  max-width: 900px;
   width: 100%;
+  min-width: 450px;
+  max-width: 1080px;
+  margin: 0 auto 0 auto;
 }
 .i-n{
   font-weight:bold;
