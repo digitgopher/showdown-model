@@ -3,7 +3,14 @@
 h1, h2, h3, p, ul, li, div{
   font-family: "Open Sans";
 }
+h3{
+  font-weight: 400;
+  font-size: 24px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
 
+}
 ul{
   font-size: 13px;
 }
@@ -26,12 +33,16 @@ img{
 margin-right: auto;
 
 }
+
+
 p{
   
 }
 /* il stands for input-label */
 .il-n,.il-c,.il-a{
   display:block;
+  position: relative;
+
 }
 .il-ob{
   display:block;
@@ -46,12 +57,16 @@ p{
   display:inline-block;
   background-color: #DADCE8;
   border: 1px solid lightblue;
+  max-width: 450px;
 }
 .pitcher-input{
   display:block;
-  background-color: #FABE82;
-  padding: 
-  margin-right: 45px; 
+  background: linear-gradient(45deg, #2bb673, #8dc63f); /* Standard syntax */;
+  color: #fff;
+  font-weight: 300;
+  padding: 10px;
+  max-width: 900px;
+  width: 100%;
 }
 .i-n{
   font-weight:bold;
