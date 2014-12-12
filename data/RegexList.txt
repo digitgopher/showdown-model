@@ -16,7 +16,7 @@ Number 0 can only be done to standard batting, which is read in first, because i
 9)		,([ a-zA-Z\.'-]+)	,'\1'	quoting strings
     or if the first word doesn't have a comma in front of it use this instead	(,|^)([ a-zA-Z\.'-]+)	\1'\2'
 10)		([a-zA-Z]{1})(')([a-zA-Z]{1})	\1\\\2\3	escaping any apostrophies in names
-10b bulk showdown data only:	
+10b bulk showdown, batter data only:	(1B|2B|3B)	'\1'
 11)		\r\n	),\r\n(		put parentheses around each player - need extended mode-otherwise it shrinks to one line!
 12		,,	,NULL,
 13		,,	,NULL,

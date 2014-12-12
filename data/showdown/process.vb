@@ -12,7 +12,7 @@ Sub RangeToValue()
     Dim jj As Integer
    
     ' ***BE SURE TO SET THIS***
-    Set rngCell = Range("F2:M200")
+    Set rngCell = Range("G219:O351")
 
     For Each cell In rngCell.Cells
         If cell.Value = 0 Then ' do nothing, write for formatting sake
@@ -43,3 +43,17 @@ Sub RangeToValue()
 
 End Sub
 
+Sub RemoveEmptyRows()
+    'If nothing in first column but something elsewhere in the row, delete the row
+    ' While loop only used because it doesn't delete everything in one pass
+    ' ***BE SURE TO SET THIS***
+    Set colrng = Range("A4:A600")
+    Dim i As Integer
+    i = 0
+    While i < 10
+        For Each c In colrng
+            If IsEmpty(c) Then c.EntireRow.Delete
+        Next
+        i = i + 1
+    Wend
+End Sub
