@@ -14,7 +14,7 @@ if(count($argv) < 3){
         u = MySQL username\n
         p = MySQL password\n
         dist = Method to generate random opponents. Default is 'discrete'. Options:'discrete','continuous','single'\n
-        num_opp = Number of opponents of each kind to generate. Default is 2000. If 'single' is chosen num_opp is always 1.";
+        num_opp = Number of opponents of each kind to generate. Default is 200. If 'single' is chosen num_opp is always 1.";
     exit();
 }
 // 
@@ -53,7 +53,7 @@ $avgBattingOpponent = array('OB' => 7.5, 'SO' => 1.15, 'GB' => 1.77, 'FB' => 1.0
 
 // Customize arguments for R script
 $type = "discrete";
-$rscript_count = '2000';
+$rscript_count = '200';
 if(isset($argv[3])){
     $type = $argv[3];
 }
@@ -97,12 +97,20 @@ else{
 //print_r($batters);
 //print_r($avgPitchingOpponent);exit;
 $bCards = playersToCards($batters, 'b', $avgPitchingOpponent);
-print_r($bCards);
+//print_r($bCards);
 //print_r(getCardAverages($bCards));
 
 $pCards = playersToCards($pitchers, 'p', $avgBattingOpponent);
-print_r($pCards);
+//print_r($pCards);
 //print_r(getCardAverages($pCards));
+file_put_contents("formula_output.txt","********Average Pitching Opponents used to calculate batters, then real batter data, then cards output from the real batter data.\n");
+file_put_contents("formula_output.txt",print_r($avgPitchingOpponent, true),FILE_APPEND);
+file_put_contents("formula_output.txt",print_r($batters, true),FILE_APPEND);
+file_put_contents("formula_output.txt",print_r($bCards, true),FILE_APPEND);
+file_put_contents("formula_output.txt","\n********Average Batting Opponents used to calculate pitchers, then real pitcher data, then cards output from the real pitcher data.\n",FILE_APPEND);
+file_put_contents("formula_output.txt",print_r($avgBattingOpponent, true),FILE_APPEND);
+file_put_contents("formula_output.txt",print_r($pitchers, true),FILE_APPEND);
+file_put_contents("formula_output.txt",print_r($pCards, true),FILE_APPEND);
 
 //print_r(averageMetaOnbase(getCardAverages($bCards),getCardAverages($pCards)));
 
@@ -112,13 +120,13 @@ $mysqli->close();
 function playersToCards($players, $type, $avgOpp){
     switch ($type) {
         case 'b':
-            $minNumOuts = 1; // These values will be used to pick the
+            $minNumOuts = 2; // These values will be used to pick the
             $maxNumOuts = 7; // most appropriate OB vs. num outs.
             $ob_ctrl = 'OB';
             break;
         case 'p':
-            $minNumOuts = 13;
-            $maxNumOuts = 19;
+            $minNumOuts = 14;
+            $maxNumOuts = 18;
             $ob_ctrl = 'C';
             break;
         default:
@@ -127,7 +135,9 @@ function playersToCards($players, $type, $avgOpp){
     }
     $cards = array();
     // Get card of all batters
+    $inc = 0;
     foreach ($players as $num => $player) {
+        print "Processing player ".++$inc.": ".$player->real['nameFirst']." ".$player->real['nameLast']."\n";
         $diffs = array();
         $difsums = array();
         $result = array();

@@ -2,7 +2,7 @@
 class BatterFormula
 {
     // Real-life statistical values, pulled in from database
-    protected $real;
+    public $real;
 
     // Constructor for a batter
     function __construct($rawData){

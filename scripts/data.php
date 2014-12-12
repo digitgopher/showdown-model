@@ -33,7 +33,8 @@ $b_query = "SELECT
             bs.CS
     FROM 2014_bat_std bs
     INNER JOIN 2014_bat_ratio br ON bs.nameFull = br.nameFull AND bs.PA = br.PA
-    WHERE bs.nameLast = 'McCutchen' #bs.AB > 500bs.nameLast = 'Zunino'
+    WHERE bs.AB > 150 #500 #bs.nameLast = 'McCutchen' bs.nameLast = 'Zunino'
+		#AND bs.AB < 200
     ORDER BY bs.AB DESC
 ;";
 
@@ -64,7 +65,8 @@ $p_query = "SELECT
     FROM 2014_pitch_std ps
     INNER JOIN 2014_pitch_opp po ON ps.nameFull = po.nameFull AND ps.IP = po.IP
     INNER JOIN 2014_pitch_ratio pr ON ps.nameFull = pr.nameFull AND ps.IP = pr.IP
-    WHERE ps.nameFull = 'Madison Bumgarner' #ps.G > 70 
+    WHERE ps.G > 40 #70 #ps.nameFull = 'Madison Bumgarner' 
+		OR ps.GS > 15
     ORDER BY po.AB DESC
 ;";
 
