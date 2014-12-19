@@ -191,6 +191,120 @@ function roundChart($chart, $firstKey){
                 $temp[$curKey]++;
             }
             break;
+        case -3:
+            // Give 1B+ if single and double values allow for it, else find the most appropriate value to add to
+            $singlesOff = $doublesOff = 0;
+            if($firstKey == 'OB'){
+                $singlesOff = abs($temp['1B'] - $chart['1B']);
+                $doublesOff = abs($temp['2B'] - $chart['2B']);
+            }
+            if($singlesOff + $doublesOff > .8){
+                $temp['1B+'] += 3;
+            }
+            elseif($singlesOff + $doublesOff > .6){
+                $temp['1B+'] += 2;
+                $curVal = 0;
+                $curKey = '';
+                foreach ($chart as $key => $value) {
+                    if($key == $firstKey){
+                        continue;
+                    }
+                    if($value > round($value)){ // Only care if we are rounding down by default...
+                        if($value - round($value) > $curVal){
+                            $curVal = $value - round($value);
+                            $curKey = $key;
+                        }
+                    }
+                }
+                $temp[$curKey]++;
+            }
+            elseif($singlesOff + $doublesOff > .3){
+                $temp['1B+']++;
+                // Add 1 to the two 'most off' values
+                $curVal = 0;
+                $curKey = '';
+                // Find first value that is most off
+                foreach ($chart as $key => $value) {
+                    if($key == $firstKey){
+                        continue;
+                    }
+                    if($value > round($value)){ // Only care if we are rounding down by default...
+                        if($value - round($value) > $curVal){
+                            $curVal = $value - round($value);
+                            $curKey = $key;
+                        }
+                    }
+                }
+                $temp[$curKey]++;
+                $curVal = 0;
+                $markedKey = $curKey;
+                $curKey = '';
+                // Find the second most off value
+                foreach ($chart as $key => $value) {
+                    if($key == $firstKey || $key == $markedKey){
+                        continue;
+                    }
+                    if($value > round($value)){ // Only care if we are rounding down by default...
+                        if($value - round($value) > $curVal){
+                            $curVal = $value - round($value);
+                            $curKey = $key;
+                        }
+                    }
+                }
+                $temp[$curKey]++;
+            }
+            else{
+                // Similar to previous case, give the 3 extra results to the 3 most deserving values.
+                // TODO: Make it more fair (weighted) rather than only adding 1 to each
+                $curVal = 0;
+                $curKey = '';
+                // Find first value that is most off
+                foreach ($chart as $key => $value) {
+                    if($key == $firstKey){
+                        continue;
+                    }
+                    if($value > round($value)){ // Only care if we are rounding down by default...
+                        if($value - round($value) > $curVal){
+                            $curVal = $value - round($value);
+                            $curKey = $key;
+                        }
+                    }
+                }
+                $temp[$curKey]++;
+                $curVal = 0;
+                $markedKey = $curKey;
+                $curKey = '';
+                // Find the second most off value
+                foreach ($chart as $key => $value) {
+                    if($key == $firstKey || $key == $markedKey){
+                        continue;
+                    }
+                    if($value > round($value)){ // Only care if we are rounding down by default...
+                        if($value - round($value) > $curVal){
+                            $curVal = $value - round($value);
+                            $curKey = $key;
+                        }
+                    }
+                }
+                $temp[$curKey]++;
+                $curVal = 0;
+                $otherMarkedKey = $curKey;
+                $curKey = '';
+                // Find the second most off value
+                foreach ($chart as $key => $value) {
+                    if($key == $firstKey || $key == $markedKey || $key == $otherMarkedKey){
+                        continue;
+                    }
+                    if($value > round($value)){ // Only care if we are rounding down by default...
+                        if($value - round($value) > $curVal){
+                            $curVal = $value - round($value);
+                            $curKey = $key;
+                        }
+                    }
+                }
+                $temp[$curKey]++;
+            }
+            break;
         case 1:
             $curVal = 0;
             $curKey = '';
@@ -241,8 +355,58 @@ function roundChart($chart, $firstKey){
             }
             $temp[$curKey]--;
             break;
+        case 3:
+            // Subtract 1 from the three 'most off' values
+            $curVal = 0;
+            $curKey = '';
+            // Find the first value that is 'most off'
+            foreach ($chart as $key => $value) {
+                if($key == $firstKey){
+                    continue;
+                }
+                if($value < round($value)){ // Only care if we are rounding up by default...
+                    if(round($value) - $value > $curVal){
+                        $curVal = round($value) - $value;
+                        $curKey = $key;
+                    }
+                }
+            }
+            $temp[$curKey]--;
+            $curVal = 0;
+            $markedKey = $curKey;
+            $curKey = '';
+            // Find the second value that is 'most off'
+            foreach ($chart as $key => $value) {
+                if($key == $firstKey || $key == $markedKey){
+                    continue;
+                }
+                if($value < round($value)){ // Only care if we are rounding up by default...
+                    if(round($value) - $value > $curVal){
+                        $curVal = round($value) - $value;
+                        $curKey = $key;
+                    }
+                }
+            }
+            $temp[$curKey]--;
+            $curVal = 0;
+            $otherMarkedKey = $curKey;
+            $curKey = '';
+            // Find the third value that is 'most off'
+            foreach ($chart as $key => $value) {
+                if($key == $firstKey || $key == $markedKey || $otherMarkedKey){
+                    continue;
+                }
+                if($value < round($value)){ // Only care if we are rounding up by default...
+                    if(round($value) - $value > $curVal){
+                        $curVal = round($value) - $value;
+                        $curKey = $key;
+                    }
+                }
+            }
+            $temp[$curKey]--;
+            break;
         default:
-            echo "Shouln't get here EVERRRRRR!! Count value = ".$count."\n";
+            echo "Shouln't get here EVERRRRRRRRRRRRRRR!! Count value = ".$count."\n";
     }
     return $temp;
 }
