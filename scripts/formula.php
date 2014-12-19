@@ -8,8 +8,13 @@ require 'PitcherFormula.php';
 require 'data.php';
 include 'maths.php';
 
+$randomMethodList = ['discrete','continuous','single'];
 // Command line usage
-if(count($argv) < 3){
+if(// Input errors
+    count($argv) < 3 || 
+    (isset($argv[3]) && !in_array($argv[3],$randomMethodList)) || 
+    (isset($argv[4]) && (string)(int)($argv[4]) != $argv[4])
+    ){
     print "\nArgument usage: u,p[,dist[,num_opp]]\n
         u = MySQL username\n
         p = MySQL password\n
@@ -22,9 +27,9 @@ if(count($argv) < 3){
 // Setup
 $batters = array();
 $pitchers = array();
-$mysqli = new mysqli("127.0.0.1", $argv[1], $argv[2], "mlb");
-if ($mysqli->connect_errno) {
-    echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
+$mysqli = mysqli_connect("127.0.0.1", $argv[1], $argv[2], "mlb");
+if (!$mysqli) {
+    die("Failed to connect to MySQL: (" . mysqli_connect_errno() . ") " . mysqli_connect_error());
 }
 // Get batters
 $b_stmt = $mysqli->prepare($b_query);
@@ -103,13 +108,11 @@ $bCards = playersToCards($batters, 'b', $avgPitchingOpponent);
 $pCards = playersToCards($pitchers, 'p', $avgBattingOpponent);
 //print_r($pCards);
 //print_r(getCardAverages($pCards));
-file_put_contents("formula_output.txt","********Average Pitching Opponents used to calculate batters, then real batter data, then cards output from the real batter data.\n");
-file_put_contents("formula_output.txt",print_r($avgPitchingOpponent, true),FILE_APPEND);
-file_put_contents("formula_output.txt",print_r($batters, true),FILE_APPEND);
-file_put_contents("formula_output.txt",print_r($bCards, true),FILE_APPEND);
-file_put_contents("formula_output.txt","\n********Average Batting Opponents used to calculate pitchers, then real pitcher data, then cards output from the real pitcher data.\n",FILE_APPEND);
-file_put_contents("formula_output.txt",print_r($avgBattingOpponent, true),FILE_APPEND);
-file_put_contents("formula_output.txt",print_r($pitchers, true),FILE_APPEND);
+
+// Print results file
+//file_put_contents("formula_output.txt",print_r($batters, true),FILE_APPEND);
+file_put_contents("formula_output.txt",print_r($bCards, true));//,FILE_APPEND);
+//file_put_contents("formula_output.txt",print_r($pitchers, true),FILE_APPEND);
 file_put_contents("formula_output.txt",print_r($pCards, true),FILE_APPEND);
 
 //print_r(averageMetaOnbase(getCardAverages($bCards),getCardAverages($pCards)));

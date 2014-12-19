@@ -259,34 +259,6 @@ class BatterFormula
         return $b_result; 
     }
 
-    // Returns the exact number of slots on charts that should be given if the batter
-    // is to have the same performance as real life, per pitcher passed in.
-    function computeBatterNum_G($OB, $metric, $PA, $pC, $p_result){
-        // General form:
-        // realLifeCount / plateApperances = chance of batters chart * chance of getting that result on batters chart + chance of pitchers chart * chance of getting that result on pitchers chart
-        // realLifeCount = GBtoFBratio * number of batted outs /(1 + GBtoFBratio)
-        // Equation:
-        // ($bGtoF*$batted_outs/(1+$bGtoF))/$bPA = (($OB-$C)/20*numGBonBattersChart/20) + ((20-($OB-$C))/20*numGBonPitchersChart/20)
-        //
-        // Equation solved by WolphramAlpha as follows:
-        // (a*b/(1+a))/$bPA = (($OB-$C)/20*numGBonBattersChart/20) + ((20-($OB-$C))/20*numGBonPitchersChart/20) solve for f
-        // 
-        // where:
-        //      a = GB/FB ratio
-        //      b = number of batted outs
-        //      c = C
-        //      d = OB
-        //      e = p_result (number of result values on pitcher's chart)
-        //      f = b_result (number of result values on batter's chart)
-        //
-        // Only Restriction: b*c != b*d
-        //      essentially meaning OB can't equal Control, and PA can't be 0
-
-        $b_result = ($PA*$p_result*($pC - $OB + 20) - 400*$metric)/($PA*($pC - $OB));
-        // Negative means the average pitcher needs to be worse!
-        return $b_result; 
-    }
-
     // Built to take a representative sample of pitchers, the game calculations all depend on the selection of pitchers!
     function computePercentDifferent($batter, $pitchers){
         $batted_outs = $this->real['AB'] - $this->real['SO'] - $this->real['H'];
@@ -319,9 +291,9 @@ class BatterFormula
             $calcs['GB'] += ($batter['OB']-$pitchers['C'][$index])/20 * $batter['GB']/20 + (20-($batter['OB']-$pitchers['C'][$index]))/20*$pitchers['GB'][$index]/20;  
             $calcs['FB'] += ($batter['OB']-$pitchers['C'][$index])/20 * $batter['FB']/20 + (20-($batter['OB']-$pitchers['C'][$index]))/20*($pitchers['FB'][$index] + $pitchers['PU'][$index])/20;  
             $calcs['BB'] += ($batter['OB']-$pitchers['C'][$index])/20 * $batter['BB']/20 + (20-($batter['OB']-$pitchers['C'][$index]))/20*$pitchers['BB'][$index]/20;  
-            $calcs['1B'] += ($batter['OB']-$pitchers['C'][$index])/20 * $batter['1B']/20 + (20-($batter['OB']-$pitchers['C'][$index]))/20*$pitchers['1B'][$index]/20;  
-            $calcs['1B+'] += ($batter['OB']-$pitchers['C'][$index])/20 * $batter['1B+']/20;  
-            $calcs['2B'] += ($batter['OB']-$pitchers['C'][$index])/20 * $batter['2B']/20 + (20-($batter['OB']-$pitchers['C'][$index]))/20*$pitchers['2B'][$index]/20;  
+            $calcs['1B'] += ($batter['OB']-$pitchers['C'][$index])/20 * ($batter['1B'] + $batter['1B+']/2)/20 + (20-($batter['OB']-$pitchers['C'][$index]))/20*$pitchers['1B'][$index]/20;  
+            $calcs['1B+'] += 0; 
+            $calcs['2B'] += ($batter['OB']-$pitchers['C'][$index])/20 * ($batter['2B'] + $batter['1B+']/2)/20 + (20-($batter['OB']-$pitchers['C'][$index]))/20*$pitchers['2B'][$index]/20;  
             $calcs['3B'] += ($batter['OB']-$pitchers['C'][$index])/20 * $batter['3B']/20;
             $calcs['HR'] += ($batter['OB']-$pitchers['C'][$index])/20 * $batter['HR']/20 + (20-($batter['OB']-$pitchers['C'][$index]))/20*$pitchers['HR'][$index]/20;  
         }
