@@ -1,16 +1,19 @@
 #The MLB Showdown Statistics Project
 
-Creating MLB Showdown sets that play as true-to-life as possible.
+Creating MLB Showdown card sets that play as true-to-life as possible.
 
-<ul>
-<li> `formula.php` is the master script. This outputs MLB Showdown card charts based on actual season statistics.</li>
-<li> `data` is compiled from existing Showdown cards as well as MLB season statistics.</li>
-<li> `statsim` contains the code for an in-browser game simulator *(soon to be hosted)*</li>
-</ul>
+###How it works
+The script [formula.php](scripts/formula.php) outputs MLB Showdown card charts based on actual season statistics.
+Existing Showdown card data, as well as MLB season statistics, are stored in the data folder. There are also helpers to convert raw statistics into usable sql tables.
+
+###FAQ
+Sounds confusing. Are you going to release the results? * Yep, we are working on it.*
+
+Any more details on how the model works? *Coming soon!*
 
 Why in the world are you using php on the command line? *Because at one point I wanted to, and it works.*
 
-#### About the game itself
+### About the game itself
 Play a game of baseball with trading cards. In a nutshell: Roll a 20 sided die twice to determine the result of an at-bat.
 Links: See the [rules][1] of the [game][2]. Example [pitcher][4] and [position player][3] cards.
 
