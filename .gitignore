@@ -1,6 +1,7 @@
 # Node server stuff - get that out of here.
 node_modules
 package.json
+node.js
 
 # Windows/Microsoft Ghost Files
 ~$*.*
