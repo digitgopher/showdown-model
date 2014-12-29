@@ -1,4 +1,4 @@
-showdown-sim
+MLB Showdown Game Simulator
 ============
 
-The game simulator used in MLBShowdownStatistics
+The engine for a simulator that outputs average game results (score and player stats).
