@@ -76,11 +76,8 @@ define([], function() {
   
   var abres = ''; // current batter's result
   
-  var outs = 0;
-  
   var batters;
   var pitchers;
-  var defense;
   
   
   
@@ -91,22 +88,18 @@ define([], function() {
   //    * passed exactly 9 batters (there is a single batter flag) and 1 pitcher.
   //    * return the average number of each result as a percentage of average number of plate appearances
   // The function simulates a large number of innings played, and does that many times to average the results. 
-  function run(b, p, d){
+  //
+  // If defense is to be used: defense[0] = catcher throwing
+  //                           defense[1] = infield
+  //                           defense[2] = outfield
+  // If defense to be ignored: defense = 0
+  function run(b, p, defense){
     // Set so other methods can access
     batters = b;
     pitchers = p;
-    defense = d;
     temp = new Array();
-    var useDefense = false;
     var curBatter = 0; // set first batter
     var curBatterSpeed;
-    
-    if(defense.length > 1){
-      useDefense = true;
-      var catcher = defense[0];
-      var infield = defense[1];
-      var outfield = defense[2];
-    }
     
     // Convert the player values to numbers as they come in as strings
     for (var i = 0; i < batters.length; i++) {
@@ -137,7 +130,12 @@ define([], function() {
     
     for (var a = 0; a < sig; a++){
       // Reset everything for next round of simulation
-      var bases = [0,-1,-1,-1]; // Nobody is on base to start with! Bases[0] holds score.
+      // status[0] = score.
+      // status[1] = speed of batter on first, -1 if vacant
+      // status[2] = speed of batter on second, -1 if vacant
+      // status[3] = speed of batter on third, -1 if vacant
+      // status[4] = number of outs.
+      var status = [0, -1, -1, -1, 0]; // Nobody is on base to start with! 
       //score = 0;
       batterTallies = [
         [[0,0,0,0,0,0,0,0,0],[0,0/*How many steals*/,0/*Fielding representation*/]],
@@ -158,25 +156,25 @@ define([], function() {
       
       // We can play as many innings as we want, in multiples of 9 to keep things even.
       for (var i = 1; i <= 9*numGames; i++) {
-        outs = 0;
+        status[4] = 0;
         // end inning after 3 outs
-        while(outs < 3){
+        while(status[4] < 3){
           abres = getResultAtBat(curBatter);
           //console.log(abres);
           // Out result
           if(abres == "pu" || abres == "so" || abres == "gb" || abres == "fb"){
-            outs++;
+            status[4]++;
           }
           // Not an out result
           else{
             curBatterSpeed = batters[curBatter]["sp"];
-            bases = advanceRunners(useDefense, curBatterSpeed, bases);
+            status = advanceRunners(defense, curBatterSpeed, status);
           }
           // Save statistics for display
           logResult(curBatter);
           // Next batter
           curBatter = (curBatter + 1) % 9;
-          if(outs < 3){
+          if(status[4] < 3){
             //console.log("Batter "+ curBatter + " up. Inning " + i + ": " + outs + " outs.");
           }
           else{
@@ -184,18 +182,17 @@ define([], function() {
           }
           //return;
         }
-        // Inning over. Clear the bases
-        //bases = [-1,-1,-1];
-        bases[1] = -1;
-        bases[2] = -1;
-        bases[3] = -1;
+        // Inning over. Clear the basses
+        status[1] = -1;
+        status[2] = -1;
+        status[3] = -1;
       }
       // Games over
-      bases[0] /= numGames;
+      status[0] /= numGames;
       //console.log(pitcherTallies);
       //console.log(batterTallies);
       // Transform what logResult does into the statistics that will be output
-      temp.push(transformRawResultsToStatistics(bases));
+      temp.push(transformRawResultsToStatistics(status));
       //return;
       //console.log("Simulation results: ");
     
@@ -258,245 +255,257 @@ define([], function() {
     }
 
     // Also keeps the score
-    function advanceRunners(useDefense, curBatterSpeed, bases){
+    function advanceRunners(defense, curBatterSpeed, status){
       switch(abres){
         case "gb":
-          return result_gb(useDefense, curBatterSpeed, bases);
+          return result_gb(defense, curBatterSpeed, status);
           break;
         case "fb":
-          return result_fb(useDefense, curBatterSpeed, bases);
+          return result_fb(defense, curBatterSpeed, status);
           break;
         case "bb":
-          return result_bb(useDefense, curBatterSpeed, bases);
+          return result_bb(defense, curBatterSpeed, status);
           break;
         case "1b":
-          return result_1b(useDefense, curBatterSpeed, bases);
+          return result_1b(defense, curBatterSpeed, status);
           break;
         case "1b+":
-          return result_1bplus(useDefense, curBatterSpeed, bases);
+          return result_1bplus(defense, curBatterSpeed, status);
           break;
         case "2b":
-          return result_2b(useDefense, curBatterSpeed, bases);
+          return result_2b(defense, curBatterSpeed, status);
           break;
         case "3b":
-          return result_3b(useDefense, curBatterSpeed, bases);
+          return result_3b(defense, curBatterSpeed, status);
           break;
         case "hr":
-          return result_hr(useDefense, curBatterSpeed, bases);
+          return result_hr(defense, curBatterSpeed, status);
           break;
         default:
           console.error("Error: Can't advance runners because hittype not valid.");
       }
     }
     
-    function result_gb(useDefense, curBatterSpeed, bases){
-      return bases;
+    function result_gb(defense, curBatterSpeed, status){
+      return status;
     }
-    function result_fb(useDefense, curBatterSpeed, bases){
-      return bases;
+    function result_fb(defense, curBatterSpeed, status){
+      return status;
     }
     
     // Move runners after a walk
-    function result_bb(useDefense, curBatterSpeed, bases){
+    function result_bb(defense, curBatterSpeed, status){
       // No difference if using defense
-      if(bases[1] != -1){
-        if(bases[2] != -1){
-          if(bases[3] != -1){
+      if(status[1] != -1){
+        if(status[2] != -1){
+          if(status[3] != -1){
             // runners on every base...
-            bases[0]++;
-            bases[3] = bases[2];
-            bases[2] = bases[1];
-            bases[1] = curBatterSpeed;
+            status[0]++;
+            status[3] = status[2];
+            status[2] = status[1];
+            status[1] = curBatterSpeed;
           }
           else{
             // runners on first and second, not third...
-            bases[3] = bases[2];
-            bases[2] = bases[1];
-            bases[1] = curBatterSpeed;
+            status[3] = status[2];
+            status[2] = status[1];
+            status[1] = curBatterSpeed;
           }
         }
         else{
           // runner on first, not second...
-          bases[2] = bases[1];
-          bases[1] = curBatterSpeed;
+          status[2] = status[1];
+          status[1] = curBatterSpeed;
         }
       }
       else{
         // nobody on first...
-        bases[1] = curBatterSpeed;
+        status[1] = curBatterSpeed;
       }
-      return bases;
+      return status;
     }
     
     // Move runners after a single
-    function result_1b(useDefense, curBatterSpeed, bases){
-      if(!useDefense){
-        if(bases[3] != -1){ // runner on third scores
-          bases[0]++;
-          bases[3] = -1;
+    function result_1b(defense, curBatterSpeed, status){
+      if(defense.length != 3){
+        if(status[3] != -1){ // runner on third scores
+          status[0]++;
+          status[3] = -1;
         }
-        if(bases[2] != -1){ // runner on second goes to third
-          bases[3] = bases[2];
-          bases[2] = -1;
+        if(status[2] != -1){ // runner on second goes to third
+          status[3] = status[2];
+          status[2] = -1;
         }
-        if(bases[1] != -1){ // runner on first goes to second
-          bases[2] = bases[1];
+        if(status[1] != -1){ // runner on first goes to second
+          status[2] = status[1];
         }
-        bases[1] = curBatterSpeed; // and batter occupies first
+        status[1] = curBatterSpeed; // and batter occupies first
       }
-      // else{ // Use defense
-        // if(bases[2] != -1){ // runner on third scores
-          // score++;
-          // bases[2] = -1;
-        // }
-        // if(bases[1] != -1){ // runner on second goes to third, then tries for home
-          // bases[2] = bases[1];
-          // bases[1] = -1;
-          // if(roll() + outfield > batters[bases[2]]["sp"] + 5){
-            // bases[2] = -1;
-            // outs++;
-          // }
-          // else{
-            // bases[2] = -1;
-            // score++;
-          // }
-        // }
-        // if(bases[0] != -1){ // runner on first goes to second
-          // bases[1] = bases[0];
-        // }
-        // bases[0] = curBatter; // and batter occupies first
-      // }
-      return bases;
+      else{ // Use defense
+        if(status[3] != -1){ // runner on third scores
+          status[0]++;
+          status[3] = -1;
+        }
+        if(status[2] != -1){ // runner on second goes to third, then tries for home
+          status[3] = status[2];
+          status[2] = -1;
+          if(roll() + defense[2] > status[3] + 5){
+            status[3] = -1;
+            status[4]++;
+          }
+          else{
+            status[3] = -1;
+            status[0]++;
+          }
+        }
+        if(status[1] != -1){ // runner on first goes to second
+          status[2] = status[1];
+        }
+        status[1] = curBatterSpeed; // and batter occupies first
+      }
+      return status;
     }
     
     // Move runners on a single plus
-    function result_1bplus(useDefense, curBatterSpeed, bases){
-      if(!useDefense){
-        if(bases[3] != -1){ // runner on third scores
-          bases[0]++;
-          bases[3] = -1;
+    function result_1bplus(defense, curBatterSpeed, status){
+      if(defense.length != 3){
+        if(status[3] != -1){ // runner on third scores
+          status[0]++;
+          status[3] = -1;
         }
-        if(bases[2] != -1){ // runner on second goes to third
-          bases[3] = bases[2];
-          bases[2] = -1;
+        if(status[2] != -1){ // runner on second goes to third
+          status[3] = status[2];
+          status[2] = -1;
         }
-        if(bases[1] != -1){ // runner on first goes to second, batter goes to first
-          bases[2] = bases[1];
-          bases[1] = curBatterSpeed;
+        if(status[1] != -1){ // runner on first goes to second, batter goes to first
+          status[2] = status[1];
+          status[1] = curBatterSpeed;
         }else{ // no runner on first: batter takes second
-          bases[2] = curBatterSpeed;
+          status[2] = curBatterSpeed;
         }
       }
       // else{ // Use defense
-        // if(bases[2] != -1){ // runner on third scores
+        // if(status[2] != -1){ // runner on third scores
           // score++;
-          // bases[2] = -1;
+          // status[2] = -1;
         // }
-        // if(bases[1] != -1){ // runner on second goes to third, then tries for home
-          // bases[2] = bases[1];
-          // bases[1] = -1;
-          // if(roll() + outfield > batters[bases[2]]["sp"] + 5){
-            // bases[2] = -1;
+        // if(status[1] != -1){ // runner on second goes to third, then tries for home
+          // status[2] = status[1];
+          // status[1] = -1;
+          // if(roll() + outfield > batters[status[2]]["sp"] + 5){
+            // status[2] = -1;
             // outs++;
           // }
           // else{
-            // bases[2] = -1;
+            // status[2] = -1;
             // score++;
           // }
         // }
-        // if(bases[0] != -1){ // runner on first goes to second, batter goes to first
-          // bases[1] = bases[0];
-          // bases[0] = curBatter;
+        // if(status[0] != -1){ // runner on first goes to second, batter goes to first
+          // status[1] = status[0];
+          // status[0] = curBatter;
         // }else{ // no runner on first: batter takes second
-          // bases[1] = curBatter;
+          // status[1] = curBatter;
         // }
       // }
-      return bases;
+      return status;
     }
     
     // Move runners from a double
-    function result_2b(useDefense, curBatterSpeed, bases){
-      if(!useDefense){
-        if(bases[3] != -1){ // runner on third scores
-          bases[0]++;
-          bases[3] = -1;
+    function result_2b(defense, curBatterSpeed, status){
+      if(defense.length != 3){
+        if(status[3] != -1){ // runner on third scores
+          status[0]++;
+          status[3] = -1;
         }
-        if(bases[2] != -1){ // runner on second scores
-          bases[0]++;
-          bases[2] = -1;
+        if(status[2] != -1){ // runner on second scores
+          status[0]++;
+          status[2] = -1;
         }
-        if(bases[1] != -1){ // runner goes first to third
-          bases[3] = bases[1];
-          bases[1] = -1;
+        if(status[1] != -1){ // runner goes first to third
+          status[3] = status[1];
+          status[1] = -1;
         }
-        bases[2] = curBatterSpeed; // batter stands on second
+        status[2] = curBatterSpeed; // batter stands on second
       }
       // else{ // Use defense
-        // if(bases[2] != -1){ // runner on third scores
+        // if(status[2] != -1){ // runner on third scores
           // score++;
-          // bases[2] = -1;
+          // status[2] = -1;
         // }
-        // if(bases[1] != -1){ // runner on second scores
+        // if(status[1] != -1){ // runner on second scores
           // score++;
-          // bases[1] = -1;
+          // status[1] = -1;
         // }
-        // if(bases[0] != -1){ // runner goes first to third, and tries to score
-          // bases[2] = bases[0];
-          // bases[0] = -1;
-          // if(roll() + outfield > batters[bases[2]]["sp"] + 5){
-            // bases[2] = -1;
+        // if(status[0] != -1){ // runner goes first to third, and tries to score
+          // status[2] = status[0];
+          // status[0] = -1;
+          // if(roll() + outfield > batters[status[2]]["sp"] + 5){
+            // status[2] = -1;
             // outs++;
           // }
           // else{
-            // bases[2] = -1;
+            // status[2] = -1;
             // score++;
           // }
         // }
-        // bases[1] = curBatter; // batter stands on second
+        // status[1] = curBatter; // batter stands on second
       // }
-      return bases;
+      return status;
     }
     
     // Move runners on triple
-    function result_3b(useDefense, curBatterSpeed, bases){
+    function result_3b(defense, curBatterSpeed, status){
       // No difference with defence
-      if(bases[1] != -1){ // everybody scores!
-        bases[0]++;
-        bases[1] = -1;
+      if(status[1] != -1){ // everybody scores!
+        status[0]++;
+        status[1] = -1;
       }
-      if(bases[2] != -1){
-        bases[0]++;
-        bases[2] = -1;
+      if(status[2] != -1){
+        status[0]++;
+        status[2] = -1;
       }
-      if(bases[3] != -1){
-        bases[0]++;
-        bases[3] = -1;
+      if(status[3] != -1){
+        status[0]++;
+        status[3] = -1;
       }
-      bases[3] = curBatterSpeed; // and the batter stands on third
-      return bases;
+      status[3] = curBatterSpeed; // and the batter stands on third
+      return status;
     }
     
     // Move runners on a hr
-    function result_hr(useDefense, curBatterSpeed, bases){
-      if(bases[1] != -1){ // everybody scores!
-        bases[0]++;
-        bases[1] = -1;
+    function result_hr(defense, curBatterSpeed, status){
+      if(status[1] != -1){ // everybody scores!
+        status[0]++;
+        status[1] = -1;
       }
-      if(bases[2] != -1){
-        bases[0]++;
-        bases[2] = -1;
+      if(status[2] != -1){
+        status[0]++;
+        status[2] = -1;
       }
-      if(bases[3] != -1){
-        bases[0]++;
-        bases[3] = -1;
+      if(status[3] != -1){
+        status[0]++;
+        status[3] = -1;
       }
-      bases[0]++;
-      return bases;
+      status[0]++;
+      return status;
     }
 
     // Ubiquitous!
     function roll(){
       return Math.ceil(Math.random() * 20);
+    }
+    
+    // Where the defense action is at!
+    function fieldingCheck(){
+      if(roll() + defense[2] > status[3] + 5){
+            status[3] = -1;
+            status[4]++;
+          }
+          else{
+            status[3] = -1;
+            status[0]++;
+          }
     }
 
     function logResult(curBatter){
@@ -508,7 +517,7 @@ define([], function() {
     // build 'results'
     // results has 11 items:
     // The first 9 are batters, then pitcher, then score
-    function transformRawResultsToStatistics(bases){
+    function transformRawResultsToStatistics(status){
       var r = new Array();
       // Access a specific raw value with batterTallies[batterIndex][0][resultOfAtbat]
       // Compute each (resultOfAtbat/Plate Appearances), as well as OBP
@@ -547,7 +556,7 @@ define([], function() {
       }
       
       // Score
-      r.push({"Score" : bases[0]});
+      r.push({"Score" : status[0]});
       return r;
     }
     
