@@ -12,16 +12,17 @@ Sub RangeToValue()
     Dim jj As Integer
    
     ' ***BE SURE TO SET THIS***
-    Set rngCell = Range("G219:O351")
+    Set rngCell = Range("G2:O2442")
 
     For Each cell In rngCell.Cells
-        If cell.Value = 0 Then ' do nothing, write for formatting sake
+        ' 1) Hyphen only
+        If cell.Value = "-" Then
             cell.Value = 0
-        ElseIf cell.Value = 1 Then ' same
+        ' 2) "1-"
+        ElseIf cell.Value = "1-" Then
             cell.Value = 1
-        ElseIf InStr(cell.Value, "-") = 0 Then ' does not contain hyphen, so change it to 1 (Ex: 20)
-            cell.Value = 1
-        Else ' Cell contains hyphen and needs to be calculated
+        ' 3) Anything else with a hyphen
+        ElseIf InStr(cell.Value, "-") Then
             ' Set up regEx object
             With regEx
                 .Global = True
@@ -29,15 +30,35 @@ Sub RangeToValue()
                 .IgnoreCase = False
                 .Pattern = strPattern
             End With
-            Set allMatches = regEx.Execute(cell.Value) ' should always return 2 matches
-            Set i = allMatches.Item(0)
-            Set j = allMatches.Item(2)
-            ii = CInt(i)
-            jj = CInt(j)
-            computedValue = jj - ii + 1
-            ' Debug.Print ii, jj, computedValue
-            cell.Value = computedValue
-            ' Debug.Print cell.Address, cell.Value
+            Set allMatches = regEx.Execute(cell.Value)
+            If allMatches.Count = 3 Then ' Only one number then hyphen
+                cell.Value = 1
+            Else ' number before and after hyphen, do the math
+                Set i = allMatches.Item(0)
+                Set j = allMatches.Item(2)
+                ii = CInt(i)
+                jj = CInt(j)
+                computedValue = jj - ii + 1
+                ' Debug.Print ii, jj, computedValue
+                cell.Value = computedValue
+                ' Debug.Print cell.Address, cell.Value
+            End If
+        ' 4) Has a plus
+        ElseIf InStr(cell.Value, "+") Then
+            With regEx
+                .Global = True
+                .MultiLine = False
+                .IgnoreCase = False
+                .Pattern = strPattern
+            End With
+            Set allMatches = regEx.Execute(cell.Value)
+            ' First get rid of the plus
+            cell.Value = allMatches.Item(0)
+            ' Then if the value is 20 or less, convert to count
+            If cell.Value < 21 Then
+                computedValue = 21 - cell.Value
+                cell.Value = computedValue
+            End If
         End If
     Next cell
 
