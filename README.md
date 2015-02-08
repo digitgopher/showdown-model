@@ -2,7 +2,11 @@
 
 Creating MLB Showdown card sets that play as true-to-life as possible.
 
-###Methodology: How the model works
+Providing a [game statistics simulator](http://digitgopher.github.io/MLBShowdownStatistics/).
+
+### Methodology to determine card charts (distributing the 1-20 values)
+(Implemented in [formula.php](scripts/formula.php) and supporting scripts.)
+
 **Step 1**: Obtain the season statistics of the specific players to represent as Showdown cards.
 
 **Step 2**: Obtain a *representative sample* of players from the existing Showdown universe.
@@ -13,15 +17,21 @@ Creating MLB Showdown card sets that play as true-to-life as possible.
 
 **Step 5**: Perform the entire process multiple times and choose the chart that is created most often for each player.
 
-###Directory structure
-The master script is [formula.php](scripts/formula.php).
+### Other methodology: TBD
+- Points
+- Speed
+- Fielding
+- IP
 
-The data folder contains existing Showdown card data as well as MLB season statistics. There are also [various](data/showdown/process.vb) [helper](data/br/format_brdata.py) [functions](data/br/insert_brdata.py) to convert raw statistics into usable sql tables.
+### Data
 
-The sim folder contains a [Showdown game simulator](https://github.com/digitgopher/showdown-sim) - see the [project site](http://digitgopher.github.io/MLBShowdownStatistics/) to demo!
+- Season statistics data from Baseball Reference.
+- Showdown card data compiled from various sources.
+
+There are [various](data/showdown/process.vb) [helper](data/br/format_brdata.py) [functions](data/br/insert_brdata.py) (and useful regex notes) to convert raw data into usable MySQL tables.
 
 ###FAQ
-Are you going to release the results? *Yep, we are working on it.*
+Are you going to release the results of the model? *We are working towards this goal. See the [releases](https://github.com/digitgopher/MLBShowdownStatistics/releases) page for prototypes to date.*
 
 Why are you using php on the command line? *Because at one point I wanted to, and it works.*
 
