@@ -30,3 +30,36 @@ Showdown
 For hand formatted coming in from the guru.
 Starting from the state of the `batters2012` sheet in AllExistingCharts.xlsx:
 From step 9 above.
+
+
+
+
+Steps to transform AllBattersFormatted.csv into AllBattersOldSchema.csv
+
+1a)	^ 	// Get rid of spaces at beg of line
+1b)	’	// Get rid of this bad boy (D'Angelo Jimenez line 961)
+1c side note) Used this to find lines that weren't matched by the existing player-name-matcher.
+
+^((?!^([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),|^\*([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),|^\*\*([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),).)*$
+Break it down:
+^([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),	// Standard two-word name at beginning of line followed by comma
+^\*([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),	// Same, with asterisk in front
+^\*\*([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),	// Same, with double asterisk in front
+^((?!EXPRESSIONHERE).)*$	// Negative lookahead -> Matchches any line that doesn't contain EXPRESSIONHERE
+
+2)	^((?!^([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),|^\*([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),|^\*\*([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),).)*$	// Adjust every line that this finds. Most are super season records and I just dropped the SS year. One row was Ichiro without a last name. Should return 36 rows + any non-data rows.
+3a)	^([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),('0[0-9])(,,)	\1,\2,\1 \2,\3,BS,	// Split base set names into first, last, full, year, BS (1703 total)
+3b)	^\*([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),('0[0-9])(,,)	\1,\2,\1 \2,\3,PR,	// Split pennant run names into first, last, full, year, PR (394 total)
+3c)	^\*\*([a-zA-Z\.'-]*) ([- a-zA-Z\.']*),('0[0-9])(,,)	\1,\2,\1 \2,\3,TD,	// Split trading deadline names into first, last, full, year, TD (344 total)
+4)	'0([0-9])	200\1	// Replace all years
+5a)	,A,	,20,
+5b)	,B,	,15,
+5c)	,C,	,10,
+
+
+
+
+
+
+
+
