@@ -55,9 +55,21 @@ Break it down:
 5a)	,A,	,20,
 5b)	,B,	,15,
 5c)	,C,	,10,
+Dealing with icons and positions is a pain:
+6a)	".*,\+.*,\+.*"	get rid of commas right before plus
+6b)	"(.*),(\+.*)"	"\1\2"	// get rid of comma right before plus
+6x)	LF-RF	LFRF
+6c)	"([^,.]*)"	\1	// get rid of quotes around fielding values with no commas in them
+6d)	".*,.*,.*"	delete between the commas on these two entries
+6x)	---	DH // also, line 905 Ellis Burks has a +0 to get rid of
+6e)	".*".	delete between the commas on these 6 entries
+6f)	"(.*),(.*)"$	\1[]\2	// get rid of the rest of the quotes, and turn the embedded commas into brackets to manipulate later
+6g)	(.*,).*,(.*)	\1\2	// FINALLY, drop the icon position from all 2443 rows
+6h)	(.)$	\1,,,,,,,,,,,,,,,,	// add 16 commas
+6i)	\[\](.*?),	,\1	// separate positions
 
 
-
+need to open in excel and audit the adding to 20, saw some negative values...
 
 
 
