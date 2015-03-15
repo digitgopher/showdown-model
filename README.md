@@ -4,38 +4,26 @@ Creating MLB Showdown card sets that play as true-to-life as possible.
 
 Providing a [game statistics simulator](http://digitgopher.github.io/MLBShowdownStatistics/).
 
-### Methodology to determine card charts (distributing the 1-20 values)
-(Implemented in [formula.php](scripts/formula.php) and supporting scripts.)
+##### Status
+- Card charts (distributing the 1-20 values): *Implemented*
+- Points: *TBD*
+- Speed: *TBD*
+- Fielding: *TBD*
+- IP: *TBD*
 
-**Step 1**: Obtain the season statistics of the specific players to represent as Showdown cards.
-
-**Step 2**: Obtain a *representative sample* of players from the existing Showdown universe.
-
-**Step 3**: Given the number of possible out results on a card (i.e. 2 through 7 for batters, 14 through 18 for pitchers), *calculate* what a given player’s **card would be** if it had that number of out results (i.e. what should a batter’s OB value be if it's card had three total out values on it? Additionally, how would those out values be distributed?).
-
-**Step 4**: Choose the OB/num-of-out (or Control/num-of-out) combination that, after the card is calculated, leads to the *least un-accurate card*. 
-
-**Step 5**: Perform the entire process multiple times and choose the chart that is created most often for each player.
-
-### Other methodology: TBD
-- Points
-- Speed
-- Fielding
-- IP
-
-### Data
+##### Data
 
 - Season statistics data from Baseball Reference.
 - Showdown card data compiled from various sources.
 
 There are [various](data/showdown/process.vb) [helper](data/br/format_brdata.py) [functions](data/br/insert_brdata.py) (and useful regex notes) to convert raw data into usable MySQL tables.
 
-###FAQ
-Are you going to release the results of the model? *We are working towards this goal. See the [releases](https://github.com/digitgopher/MLBShowdownStatistics/releases) page for prototypes to date.*
+##### FAQ
+Are you going to release the results of the model? *The results format is still under development, see the [releases](https://github.com/digitgopher/MLBShowdownStatistics/releases) page for prototypes to date.*
 
 Why are you using php on the command line? *Because at one point I wanted to, and it works.*
 
-### About the game itself
+##### About the game itself
 Play a game of baseball with trading cards. In a nutshell: Roll a 20 sided die twice to determine the result of an at-bat.
 Links: See the [rules][1] of the [game][2]. Example [pitcher][4] and [position player][3] cards.
 
@@ -44,16 +32,10 @@ Links: See the [rules][1] of the [game][2]. Example [pitcher][4] and [position p
 [3]: http://www.showdowncards.com/images/product/1.jpg
 [4]: http://www.showdowncards.com/images/product/5.jpg
 
-## Quantitative MLB Showdown Cards: A working model
-
-Created by Daniel Tixier
-
-Updated: 12/13/14
-
-The implementation of the algorithm described in this model can be found at https://github.com/digitgopher/MLBShowdownStatistics
+# Quantitative MLB Showdown Cards: A working model
 
 
-## Intro to the concept
+### Intro to the concept
 
 The premise of this project asserts that MLB Showdown cards should be realistic representations of their player. Not just partly realistic, but as statistically accurate as possible. This is ambitious; the first project of its kind.
 
@@ -61,7 +43,7 @@ We do not mean to undermine game design, but rather enhance it. The goal is to g
 
 There is an undeniable beauty in producing cards solely based on a finely tuned and crafted algorithm. One of the most difficult concepts in creating cards is cutting small differences. Many cards look very close. Should the differences be defined by the human eye and gut feelings, or by the process? For the first time this has become an option.
 
-## Background concepts and terminology
+### Background concepts and terminology
 
 1. ***Slot***: A position on a player's Showdown card chart, corresponding to one roll of the die. There are 20 slots on a player's chart.
 
@@ -71,15 +53,15 @@ There is an undeniable beauty in producing cards solely based on a finely tuned 
 
 4. ***Number of possible out results on a card.*** Initially defined as:
 
-- 2 through 7 for batters
-- 14 through 18 for pitchers
-- That is, a batter can have between two and seven out values on his chart. These ranges are arbitrary, informed by the existing card domain.
+  - 2 through 7 for batters
+  - 14 through 18 for pitchers
+  - That is, a batter can have between two and seven out values on his chart. These ranges are arbitrary, informed by the existing card domain.
 
-5.There is no analog to a 1B+ result. The concept of the 1B+ feels “gamey”; they do not have a statistical equivalent. However, we still try to account for them. 
+5. There is no analog to a 1B+ result. The concept of the 1B+ feels “gamey”; they do not have a statistical equivalent. However, we still try to account for them. 
 
-- They are actually given when the rounding of singles and doubles leaves room for them, this means that they do not correlate with the traditional “speedy guys get more 1B+ results” rule of thumb.  Admittedly, 1B+ results are given sparingly. 
+  - They are actually given when the rounding of singles and doubles leaves room for them, this means that they do not correlate with the traditional “speedy guys get more 1B+ results” rule of thumb.  Admittedly, 1B+ results are given sparingly. 
 
-## Calculating Charts: Distributing the 20 values and OB/Control
+### Calculating Charts: Distributing the 20 values and OB/Control
 
 The developed model consists of five steps.
 
@@ -102,13 +84,13 @@ To calculate a card, there are 2 steps (We give the example of a batter, but a p
 1. **Calculate OB.** 
   The chance of getting on-base can be modeled as:
 
-  > *Equation 1*
-  > OBP = (chance of batter's chart) \* (chance of getting on base on batter's chart) + (chance of pitcher's chart) \* (chance of getting on base on pitcher's chart)
+  *Equation 1*:
+  ```OBP = (chance of batter's chart) \* (chance of getting on base on batter's chart) + (chance of pitcher's chart) \* (chance of getting on base on pitcher's chart)```
 
   which, translated to Showdown chart values, gives:
 
-  > *Equation 2*
-  > OBP = (OB-C)/20\*(20-NumOutsOnBatter'sChart)/20 + (20-(OB-C))/20\*(20-NumOutsOnPitcher'sChart)/20
+  *Equation 2*:
+  ```OBP = (OB-C)/20\*(20-NumOutsOnBatter'sChart)/20 + (20-(OB-C))/20\*(20-NumOutsOnPitcher'sChart)/20```
 
 
   OBP is known from the actual season statistic. From the generated random pitcher set (**Step 2** above), we have Control and pitcher chart information. Assuming number of outs on the batter's chart, the only variable left is OB, for which we can solve.
@@ -214,20 +196,20 @@ _The .012 value is then compared with the similar values of each of the other 5 
 
 &nbsp;
 
-## Calculating Defense & Speed
+### Calculating Defense & Speed
 
 TBD
 
-## Calculating IP
+### Calculating IP
 
 TBD
 
-## Calculating Points
+### Calculating Points
 
 TBD
 
 
-## Appendix 1: What's the big deal with On-base?
+### Appendix 1: What's the big deal with On-base?
 
 Though the term OOB should be used when dealing with pitchers, for simplicity we will universally use the term OBP.
 
