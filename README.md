@@ -85,12 +85,12 @@ To calculate a card, there are 2 steps (We give the example of a batter, but a p
   The chance of getting on-base can be modeled as:
 
   *Equation 1*:
-  ```OBP = (chance of batter's chart) \* (chance of getting on base on batter's chart) + (chance of pitcher's chart) \* (chance of getting on base on pitcher's chart)```
+  ```OBP = (chance of batter's chart) * (chance of getting on base on batter's chart) + (chance of pitcher's chart) * (chance of getting on base on pitcher's chart)```
 
   which, translated to Showdown chart values, gives:
 
   *Equation 2*:
-  ```OBP = (OB-C)/20\*(20-NumOutsOnBatter'sChart)/20 + (20-(OB-C))/20\*(20-NumOutsOnPitcher'sChart)/20```
+  ```OBP = (OB-C)/20 * (20-NumOutsOnBatter'sChart)/20 + (20-(OB-C))/20 * (20-NumOutsOnPitcher'sChart)/20```
 
 
   OBP is known from the actual season statistic. From the generated random pitcher set (**Step 2** above), we have Control and pitcher chart information. Assuming number of outs on the batter's chart, the only variable left is OB, for which we can solve.
@@ -101,37 +101,43 @@ To calculate a card, there are 2 steps (We give the example of a batter, but a p
   The key here is expressing season results in terms of plate appearances, as this is most directly modeled in Showdown. 
 
   We can determine in terms of plate appearances how often a player achieved each possible result:
+  
+  
+  | Card Chart | Season Statistic |
+  | --- | --- |
+  | SO | strikeouts |
+  | GB | o\*r/(1+r) |
+  | FB | o - GBseasonStatistic |
+  | BB | walks |
+  | 1B | singles |
+  | 1B+ | - |
+  | 2B | doubles |
+  | 3B | triples |
+  | HR | homeruns |
+  | **20** | **Plate Appearances** |
 
-    | **Card Chart** | **Season Statistic** |
-    | --- | --- |
-    | SO | strikeouts |
-    | GB | o\*r/(1+r)|
-    | FB | o - GBseasonStatistic|
-    | BB | walks |
-    | 1B | singles |
-    | 1B+ | - |
-    | 2B | doubles |
-    | 3B | triples |
-    | HR | homeruns |
-    | **20** | **Plate Appearances** |
 
   > Notes:
+  
   > 1. r = ground-ball-to-fly-ball ratio, a published statistic.
+  
   > 2. o = in-play outs = (atbats - strikeouts - hits).
+  
   > 3. Alternative equations could be given regarding FB, but it is simplest to relate to the defined GB Statistic.
+  
   > 4. There is no realistic analog for single+.
 
   The number of available card slots is 20. All the statistics together will sum to equal Plate Appearances, both in Showdown and the season statistics. Note this strategy rolls up other possibilities like fielders' choices, sacrifices, etc.
 
   We compute the number of slots assigned to each value in a similar fashion to the way we solved for OB:
 
-  > Equation 3:
-  > SeasonCount / PlateApperances = (chance of batter's chart) \* (chance of getting that result on batter's chart) + (chance of pitcher's chart) \* (chance of getting that result on pitcher's chart)
+  *Equation 3*:
+  ```SeasonCount / PlateApperances = (chance of batter's chart) * (chance of getting that result on batter's chart) + (chance of pitcher's chart) * (chance of getting that result on pitcher's chart)```
 
   Let's show an example for doubles:
 
-  > Equation 4:
-  > Doubles/PlateAppearances = (OB-C)/20\*NumDoublesOnBattersChart/20 + (20-(OB-C))/20\*NumDoublesOnPitchersChart/20
+  *Equation 4*:
+  ```Doubles/PlateAppearances = (OB-C)/20 * NumDoublesOnBattersChart/20 + (20-(OB-C))/20 * NumDoublesOnPitchersChart/20```
 
   Again, we know everything except `NumDoublesOnBattersChart`, so we can solve. This is done for all statistics. 
 
@@ -141,16 +147,19 @@ To calculate a card, there are 2 steps (We give the example of a batter, but a p
 
   _The input is 1) the set of 'average' pitcher cards, and 2) the number of outs on the batter's card to be calculated. A result could be:_
 
-  _[OB] => 9.077816_
-  _[SO] => 5_
-  _[GB] => 0_
-  _[FB] => 0_
-  _[BB] => 6.976638_
-  _[1B] => 6.022451_
-  _[1B+] => 0_
-  _[2B] => 1.180976_
-  _[3B] => 0_
-  _[HR] => 0.819933_
+  | Result | Value |
+  | --- | --- |
+  | [OB] | 9.077816 |
+  | [SO] | 5 |
+  | [GB] | 0 |
+  | [FB] | 0 |
+  | [BB] | 6.976638 |
+  | [1B] | 6.022451 |
+  | [1B+] | 0 |
+  | [2B] | 1.180976 |
+  | [3B] | 0 |
+  | [HR] | 0.819933 |
+  
   
   _The values correspond to how the slots should be divided on the chart with the given number of outs (five in this case; they happen to all be assigned to SO)._
 
@@ -172,20 +181,24 @@ To calculate a card, there are 2 steps (We give the example of a batter, but a p
   If we used two through seven outs as possibilities for batters, each batter will have 6 possible cards. Each card's total error is calculated, and the one with the least error is selected.
 
   Example:
-   _Batter season HR/PA = .0315._
+  
+  _Batter season HR/PA = .0315._
+  
   _Batter OB = 8_
+  
   _Batter HR results = 3_
+  
   _Pitcher C = 4_ (Again, we actually calculate for all the pitchers in our sample and average the result. Only one pitcher is shown here for simplicity.)
+  
   _Pitcher HR results = 0_
 
-  _Using Equation 4 obtains: _
-  > Homeruns/PlateAppearances = (8 - 4)/20\*3/20 + (20 - (8 - 4))/20\*0/20 = .03
+  _Using Equation 4 obtains: Homeruns/PlateAppearances = (8 - 4)/20\*3/20 + (20 - (8 - 4))/20\*0/20 = .03_
 
   Thus,  _Error = |.03 - .0315| = .0015_
 
   _Say the other 7 results on the batter's chart also have an error of .0015, then the total error is 8\*.0015 = .012_
 
-_The .012 value is then compared with the similar values of each of the other 5 options._
+  _The .012 value is then compared with the similar values of each of the other 5 options._
 
 
 **Step 5**: Perform the entire process multiple times and choose the chart that is created most often for each player.
@@ -193,8 +206,6 @@ _The .012 value is then compared with the similar values of each of the other 5 
   The uncertainty in the model comes from Step 2 with the creation of random representative players. In Steps 3 and 4, direct calculations are used, but their result is only as accurate as the sample obtained in Step 2. For this reason, the entire process should be performed multiple times in order to obtain the results that achieve the cards with overall best performance. 
 
 (Best performance defined as the card that, when played, produces statistics similar to those produced during the season that the card is supposed to represent.)
-
-&nbsp;
 
 ### Calculating Defense & Speed
 
@@ -234,9 +245,22 @@ Here are some sample statistics from existing sets of batters:
 
 A normal distribution mean of 7.47 and sd of 1.29 produces the following percentiles:
 
-(Insert chart here)
 
-&nbsp;
+| Percentile | Value |
+| --- | --- |
+| 1st | 4.469 |
+| 2.5th | 4.942 |
+| 5th | 5.348 |
+| 10th | 5.817 |
+| 25th | 6.600 |
+| 50th | 7.470 |
+| 75th | 8.340 |
+| 90th | 9.123 |
+| 95th | 9.592 |
+| 97.5th | 9.998 |
+| 99th | 10.471 |
+
+
 
 Based simply on the chart above, we can determine how many of each OB numbers would be in an average set.
 
@@ -252,9 +276,23 @@ Based simply on the chart above, we can determine how many of each OB numbers wo
 | 11 | 100 | 1 |
 
 
-Here are the percentiles for a pitcher outs distribution, based on "normal distribution, mean=4.08, sd=1.06". Percentiles:
+Here are the percentiles for a pitcher outs distribution, based on "normal distribution, mean=4.08, sd=1.06":
 
-(insert chart here)
+
+| Percentile | Value |
+| --- | --- |
+| 1st | 1.614 |
+| 2.5th | 2.002 |
+| 5th | 2.336 |
+| 10th | 2.722 |
+| 25th | 3.365 |
+| 50th | 4.080 |
+| 75th | 4.795 |
+| 90th | 5.438 |
+| 95th | 5.824 |
+| 97.5th | 6.158 |
+| 99th | 6.546 |
+
 
 Below is the ranking of pitcher charts, sorted by OBP – the best pitcher is at the top, the worst at the bottom. The combination of pitcher charts with control 0 – 6 and 12 – 19 outs on chart are included. 
 
