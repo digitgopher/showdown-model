@@ -80,17 +80,20 @@ define(["jquery","sim/sim","sim/validate"], function($, simulation, validate) {
     $(".results-before").removeClass('results-before');
     
     // Display score
-    var scorehtml = "Average number of runs <strong>this</strong> team will score agains <strong>this</strong> pitcher in a 9 inning game: <div class=\"score-val\">"+ score["Score"] + "</div>";
+    var scorehtml = "Average number of runs <strong>this</strong> lineup will score agains <strong>this</strong> pitcher in a 9 inning game: <div class=\"score-val\">"+ score["Score"] + "</div>";
     $(".score-results").empty().html(scorehtml);
     
     // Build batter results
     // TODO: un-hardcode the titles in all the table headings...
-    var btbl = "<table><colgroup><col class=\"out-cols\" span=\"3\"><col class=\"ob-cols\" span=\"6\"><col class=\"obp-col\"></colgroup><thead><th>SO</th><th>GB</th><th>FB</th><th>BB</th><th>1B</th><th>1B+</th><th>2B</th><th>3B</th><th>HR</th><th>OBP</th></thead>";
+    var btbl = "<table><colgroup><col class=\"out-cols\" span=\"3\"><col class=\"ob-cols\" span=\"6\"><col class=\"obp-col\"></colgroup><thead><th>Order</th><th>Name</th><th>SO</th><th>GB</th><th>FB</th><th>BB</th><th>1B</th><th>1B+</th><th>2B</th><th>3B</th><th>HR</th><th>OBP</th></thead>";
     var odd_even = false;
     $.each(results, function() {
-      var tbl_row = "";
+      var tbl_row = "<td>"+this.order+"</td><td>"+this.name+"</td>";
       $.each(this, function(k , v) {
-          tbl_row += "<td>"+v+"</td>";
+        if(k != "order" && k != "name"){
+          return tbl_row += "<td>"+v+"</td>";
+        }
+        return tbl_row;
       })
       btbl += "<tr class=\""+( odd_even ? "odd" : "even")+"\">"+tbl_row+"</tr>";
       odd_even = !odd_even;
@@ -101,10 +104,13 @@ define(["jquery","sim/sim","sim/validate"], function($, simulation, validate) {
     $(".bat-results").empty().html(btbl);
     
     // Build single pitcher results
-    var ptbl = "<table><colgroup><col class=\"out-cols\" span=\"4\"><col class=\"ob-cols\" span=\"4\"><col class=\"obp-col\"></colgroup><thead><th>PU</th><th>SO</th><th>GB</th><th>FB</th><th>BB</th><th>1B</th><th>2B</th><th>HR</th><th>OBP</th></thead>";
-    var tbl_row = "";
+    var ptbl = "<table><colgroup><col class=\"out-cols\" span=\"4\"><col class=\"ob-cols\" span=\"4\"><col class=\"obp-col\"></colgroup><thead><th>Name</th><th>PU</th><th>SO</th><th>GB</th><th>FB</th><th>BB</th><th>1B</th><th>2B</th><th>HR</th><th>OBP</th></thead>";
+    var tbl_row = "<td>"+presult.name+"</td>";
     $.each(presult, function(k , v) {
-      return tbl_row += "<td>"+v+"</td>";
+      if(k != "order" && k != "name"){
+        return tbl_row += "<td>"+v+"</td>";
+      }
+      return tbl_row;
     });
     ptbl += "<tr>"+tbl_row+"</tr></table>";
     // Display pitcher results
