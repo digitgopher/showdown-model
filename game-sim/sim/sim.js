@@ -52,6 +52,8 @@ define([], function() {
     "3b" : 6  // pitcher sees a double
   };
   
+  var orderMap = ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th"];
+  
   var sig = 100; // sig = statistically significant
   var numGames = 162;
   
@@ -79,7 +81,9 @@ define([], function() {
   var batters;
   var pitchers;
   
-  
+  var CATCHER = 0;
+  var INFIELD = 1;
+  var OUTFIELD = 2;
   
   
   /****************** THE ACTUAL SIMULATION CODE *********************/
@@ -89,9 +93,9 @@ define([], function() {
   //    * return the average number of each result as a percentage of average number of plate appearances
   // The function simulates a large number of innings played, and does that many times to average the results. 
   //
-  // If defense is to be used: defense[0] = catcher throwing
-  //                           defense[1] = infield
-  //                           defense[2] = outfield
+  // If defense is to be used: defense[0] = defense[CATCHER] =catcher throwing
+  //                           defense[1] = defense[INFIELD] =infield
+  //                           defense[2] = defense[OUTFIELD] =outfield
   // If defense to be ignored: defense = 0
   function run(b, p, defense){
     // Set so other methods can access
@@ -159,28 +163,21 @@ define([], function() {
         status[4] = 0;
         // end inning after 3 outs
         while(status[4] < 3){
+          // Get batter's result
           abres = getResultAtBat(curBatter);
-          //console.log(abres);
-          // Out result
-          if(abres == "pu" || abres == "so" || abres == "gb" || abres == "fb"){
-            status[4]++;
-          }
-          // Not an out result
-          else{
-            curBatterSpeed = batters[curBatter]["sp"];
-            status = advanceRunners(defense, curBatterSpeed, status);
-          }
+          // Activate what happens on that result
+          curBatterSpeed = batters[curBatter]["sp"];
+          status = advanceRunners(defense, curBatterSpeed, status);
           // Save statistics for display
           logResult(curBatter);
           // Next batter
           curBatter = (curBatter + 1) % 9;
-          if(status[4] < 3){
-            //console.log("Batter "+ curBatter + " up. Inning " + i + ": " + outs + " outs.");
-          }
-          else{
-            //console.log("Inning over. Moving to the "+ (i+1));
-          }
-          //return;
+          // if(status[4] < 3){
+            // console.log("Batter "+ curBatter + " up. Inning " + i + ": " + outs + " outs.");
+          // }
+          // else{
+            // console.log("Inning over. Moving to the "+ (i+1));
+          // }
         }
         // Inning over. Clear the basses
         status[1] = -1;
@@ -198,13 +195,22 @@ define([], function() {
     
     }
 
-    //console.log(temp);
-    // true flag means 9 batters, false means one
-    results = averageResults(true); // to contain all results of simulation as json to be displayed in browser
-    //console.log(results);
-    return JSON.stringify(results, function(key, val) {
+    // Always send 9 batters
+    results = averageResults(); // to contain all results of simulation as json to be displayed in browser
+    
+    // Add names and lineup order to results
+    for (var i = 0; i < batters.length; i++){
+      results[i].order = orderMap[i];
+      results[i].name = batters[i].name;
+    }
+    // Add name to pitcher results
+    results[9].name = pitchers[0].name;
+    
+    results = JSON.stringify(results, function(key, val) {
       return val.toFixed ? Number(val).toFixed(4).replace(/^0+/, '') : val;
     });
+    //console.log(results);
+    return results;
     // End simulation logic
   }
 
@@ -257,6 +263,12 @@ define([], function() {
     // Also keeps the score
     function advanceRunners(defense, curBatterSpeed, status){
       switch(abres){
+        case "pu":
+          return result_pu(defense, curBatterSpeed, status);
+          break;
+        case "so":
+          return result_so(defense, curBatterSpeed, status);
+          break;
         case "gb":
           return result_gb(defense, curBatterSpeed, status);
           break;
@@ -286,10 +298,159 @@ define([], function() {
       }
     }
     
-    function result_gb(defense, curBatterSpeed, status){
+    // Move runners on a popup
+    function result_pu(defense, curBatterSpeed, status){
+      // Nobody ever advances on a popup
+      status[4]++; // batter out
       return status;
     }
+    
+    // Move runners on a strikeout
+    function result_so(defense, curBatterSpeed, status){
+      // Nobody ever advances on a strikeout
+      status[4]++; // batter out
+      return status;
+    }
+    
+    // Move runners on a ground ball
+    function result_gb(defense, curBatterSpeed, status){
+      if(defense.length != 3){
+        // Nobody advances!
+      }
+      else{
+        // 8 combinations of baserunners, 3 possibilities for number of outs (24 configurations)
+        // Two outs (8 out of 24), nothing happens besides batter out, so logic
+        // only matters with 0 or 1 outs
+        if(status[4] < 2){
+          // No runners on base
+          if(status[1] == -1 && status[2] == -1 && status[3] == -1){
+            // nothing happens
+          }
+          // Runner on first only
+          else if(status[1] != -1 && status[2] == -1 && status[3] == -1){
+            //try double play
+            if(defenseThrow(defense[INFIELD], curBatterSpeed)){
+              // both runners out
+              status[4]++;
+              status[1] = -1;
+            }
+            else{
+              // batter to first
+              status[1] = curBatterSpeed;
+            }
+          }
+          // Runner on second only
+          else if(status[1] == -1 && status[2] != -1 && status[3] == -1){
+            //runner to third
+            status[3] = status[2];
+            status[2] = -1;
+          }
+          // Runner on third only
+          else if(status[1] == -1 && status[2] == -1 && status[3] != -1){
+            //runner scores
+            status[0]++;
+            status[3] = -1;
+          }
+          // Runner on first and second
+          else if(status[1] != -1 && status[2] != -1 && status[3] == -1){
+            //try double play
+            if(defenseThrow(defense[INFIELD], curBatterSpeed)){
+              // if there is already one out, the runner doesn't end up on third after a twin killing
+              if(status[4] == 0){
+                status[3] = status[2];
+                status[2] = -1;
+              }
+              // both runners out
+              status[4]++;
+              status[1] = -1;
+            }
+            else{
+              // batter to first, runner second to third
+              status[1] = curBatterSpeed;
+              status[3] = status[2];
+              status[2] = -1;
+            }
+          }
+          // Runner on first and third
+          else if(status[1] != -1 && status[2] == -1 && status[3] != -1){
+            //try double play
+            if(defenseThrow(defense[INFIELD], curBatterSpeed)){
+              // if there is already one out, the runner doesn't score after a twin killing
+              if(status[4] == 0){
+                status[0]++;
+                status[3] = -1;
+              }
+              // both runners out
+              status[4]++;
+              status[1] = -1;
+            }
+            else{
+              // batter to first, runner scores
+              status[1] = curBatterSpeed;
+              status[0]++;
+              status[3] = -1;
+            }
+          }
+          // Runners on second and third
+          else if(status[1] == -1 && status[2] != -1 && status[3] != -1){
+            // both runners advance
+            status[0]++;
+            status[3] = status[2];
+            status[2] = -1;
+          }
+          // Bases loaded
+          else if(status[1] != -1 && status[2] != -1 && status[3] != -1){
+            //try double play
+            if(defenseThrow(defense[INFIELD], curBatterSpeed)){
+              // if there is already one out, nobody advances after a twin killing
+              if(status[4] == 0){
+                status[0]++;
+                status[3] = status[2];
+                status[2] = -1;
+              }
+              // both runners out
+              status[4]++;
+              status[1] = -1;
+            }
+            else{
+              // batter to first, two runners advance
+              status[1] = curBatterSpeed;
+              status[0]++;
+              status[3] = status[2];
+              status[2] = -1;
+            }
+          }
+          else{
+            console.error("Error: result_gb fell all the way through");
+          }
+        }
+      }
+      status[4]++;
+      return status;
+    }
+    
+    // Move runners on a fly ball
     function result_fb(defense, curBatterSpeed, status){
+      if(defense.length != 3){
+        // Nobody advances!
+      }
+      else{
+        // Only matters if less than 2 outs.
+        if(status[4] < 2){
+          // Runner on third speed A or B scores
+          if(status[3] >= 13){
+            status[0]++;
+            status[3] = -1;
+          }
+          // no runner on third, speed A runner on second advances
+          else if(status[3] == -1 && status[2] >= 18){
+            status[3] = status[2];
+            status[2] = -1;
+          }
+        
+        }
+      }
+      status[4]++;
       return status;
     }
     
@@ -346,17 +507,9 @@ define([], function() {
           status[0]++;
           status[3] = -1;
         }
-        if(status[2] != -1){ // runner on second goes to third, then tries for home
-          status[3] = status[2];
+        if(status[2] != -1){ // runner on second scores
+          status[0]++;
           status[2] = -1;
-          if(roll() + defense[2] > status[3] + 5){
-            status[3] = -1;
-            status[4]++;
-          }
-          else{
-            status[3] = -1;
-            status[0]++;
-          }
         }
         if(status[1] != -1){ // runner on first goes to second
           status[2] = status[1];
@@ -367,6 +520,7 @@ define([], function() {
     }
     
     // Move runners on a single plus
+    
     function result_1bplus(defense, curBatterSpeed, status){
       if(defense.length != 3){
         if(status[3] != -1){ // runner on third scores
@@ -384,30 +538,23 @@ define([], function() {
           status[2] = curBatterSpeed;
         }
       }
-      // else{ // Use defense
-        // if(status[2] != -1){ // runner on third scores
-          // score++;
-          // status[2] = -1;
-        // }
-        // if(status[1] != -1){ // runner on second goes to third, then tries for home
-          // status[2] = status[1];
-          // status[1] = -1;
-          // if(roll() + outfield > batters[status[2]]["sp"] + 5){
-            // status[2] = -1;
-            // outs++;
-          // }
-          // else{
-            // status[2] = -1;
-            // score++;
-          // }
-        // }
-        // if(status[0] != -1){ // runner on first goes to second, batter goes to first
-          // status[1] = status[0];
-          // status[0] = curBatter;
-        // }else{ // no runner on first: batter takes second
-          // status[1] = curBatter;
-        // }
-      // }
+      else{ // Use defense
+        if(status[3] != -1){ // runner on third scores
+          status[0]++;
+          status[3] = -1;
+        }
+        if(status[2] != -1){ // runner on second scores
+          status[0]++;
+          status[2] = -1;
+          
+        }
+        if(status[1] != -1){ // runner on first goes to second, batter goes to first
+          status[2] = status[1];
+          status[1] = curBatterSpeed;
+        }else{ // no runner on first: batter takes second
+          status[2] = curBatterSpeed;
+        }
+      }
       return status;
     }
     
@@ -428,35 +575,32 @@ define([], function() {
         }
         status[2] = curBatterSpeed; // batter stands on second
       }
-      // else{ // Use defense
-        // if(status[2] != -1){ // runner on third scores
-          // score++;
-          // status[2] = -1;
-        // }
-        // if(status[1] != -1){ // runner on second scores
-          // score++;
-          // status[1] = -1;
-        // }
-        // if(status[0] != -1){ // runner goes first to third, and tries to score
-          // status[2] = status[0];
-          // status[0] = -1;
-          // if(roll() + outfield > batters[status[2]]["sp"] + 5){
-            // status[2] = -1;
-            // outs++;
-          // }
-          // else{
-            // status[2] = -1;
-            // score++;
-          // }
-        // }
-        // status[1] = curBatter; // batter stands on second
-      // }
+      else { // use defense
+        if(status[3] != -1){ // runner on third scores
+          status[0]++;
+          status[3] = -1;
+        }
+        if(status[2] != -1){ // runner on second scores
+          status[0]++;
+          status[2] = -1;
+        }
+        if(status[1] != -1){ // runner goes first to third
+          status[3] = status[1];
+          status[1] = -1;
+          // ...then scores if he's speed A and 2 outs
+          if(status[4] == 2 && status[3] >= 18){
+            status[0]++;
+            status[3] = -1;
+          }
+        }
+        status[2] = curBatterSpeed; // batter stands on second
+      }
       return status;
     }
     
     // Move runners on triple
     function result_3b(defense, curBatterSpeed, status){
-      // No difference with defence
+      // No difference with defense
       if(status[1] != -1){ // everybody scores!
         status[0]++;
         status[1] = -1;
@@ -475,6 +619,7 @@ define([], function() {
     
     // Move runners on a hr
     function result_hr(defense, curBatterSpeed, status){
+      // No difference with defense
       if(status[1] != -1){ // everybody scores!
         status[0]++;
         status[1] = -1;
@@ -497,15 +642,10 @@ define([], function() {
     }
     
     // Where the defense action is at!
-    function fieldingCheck(){
-      if(roll() + defense[2] > status[3] + 5){
-            status[3] = -1;
-            status[4]++;
-          }
-          else{
-            status[3] = -1;
-            status[0]++;
-          }
+    // true = runner thrown out
+    // false = runner safe
+    function defenseThrow(totalDefenseValue, totalSpeedValue){
+      return roll() + totalDefenseValue > totalSpeedValue ? true : false;
     }
 
     function logResult(curBatter){
@@ -564,7 +704,7 @@ define([], function() {
     // At this point temp contains:
     //       temp[simNumber][batterNo,pitcher,score][each value]
     // n^3...ugh
-    function averageResults(nineBatters){
+    function averageResults(){
       // Initialize an array
       // var r = zeros([batters.length,batters[0][0].length]);
       // function zeros(dim){
@@ -625,6 +765,10 @@ define([], function() {
   return {
     run:run,
     roll:roll,
+    defenseThrow:defenseThrow,
+    
+    result_pu: result_pu,
+    result_so: result_so,
     result_gb: result_gb,
     result_fb: result_fb,
     result_bb: result_bb,
@@ -633,5 +777,6 @@ define([], function() {
     result_2b: result_2b,
     result_3b: result_3b,
     result_hr: result_hr
+    
   };
 });

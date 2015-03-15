@@ -1,6 +1,6 @@
 requirejs.config({
     //By default load any module IDs from baseUrl
-    baseUrl: 'lib',
+    baseUrl: 'sim/lib',
     //except, if the module ID starts with "app", "sim", etc
     //paths config is relative to the baseUrl, and
     //never includes a ".js" extension since
