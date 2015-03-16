@@ -2,7 +2,7 @@
 
 Creating MLB Showdown card sets that play as true-to-life as possible.
 
-Providing a [game statistics simulator](http://digitgopher.github.io/MLBShowdownStatistics/).
+Additionally, a [game statistics simulator](http://digitgopher.github.io/MLBShowdownStatistics/) has been developed.
 
 ##### Status
 - Card charts (distributing the 1-20 values): *Implemented*
@@ -15,16 +15,18 @@ Providing a [game statistics simulator](http://digitgopher.github.io/MLBShowdown
 
 - Season statistics data from Baseball Reference.
 - Showdown card data compiled from various sources.
+- There are [various](data/showdown/process.vb) [helper](data/br/format_brdata.py) [functions](data/br/insert_brdata.py) (and useful regex notes) to convert raw data into usable MySQL tables.
 
-There are [various](data/showdown/process.vb) [helper](data/br/format_brdata.py) [functions](data/br/insert_brdata.py) (and useful regex notes) to convert raw data into usable MySQL tables.
+##### Usage
 
-##### FAQ
-Are you going to release the results of the model? *The results format is still under development, see the [releases](https://github.com/digitgopher/MLBShowdownStatistics/releases) page for prototypes to date.*
+- Load data (`cards-tables.sql`, `[yyyy]_all.sql`). Tested with MySQL.
+- Set up R and required libraries. Works without this if you use `single` for opponent (distribution of opponents will not be used).
+- Run `formula.php` command line. *Output is very raw. The results format is still under development, see [releases](https://github.com/digitgopher/MLBShowdownStatistics/releases) for prototypes to date.*
+- Todo: make interface, unhardcode a bunch of things, and/or publish results of the model.
 
-Why are you using php on the command line? *Because at one point I wanted to, and it works.*
 
 ##### About the game itself
-Play a game of baseball with trading cards. In a nutshell: Roll a 20 sided die twice to determine the result of an at-bat.
+Play baseball with trading cards. In a nutshell: Roll a 20 sided die twice to determine the result of an at-bat.
 Links: See the [rules][1] of the [game][2]. Example [pitcher][4] and [position player][3] cards.
 
 [1]: http://www.geocities.ws/mlbshowdown/rulebook.html
@@ -35,31 +37,31 @@ Links: See the [rules][1] of the [game][2]. Example [pitcher][4] and [position p
 # Quantitative MLB Showdown Cards: A working model
 
 
-### Intro to the concept
+### The dream
 
-The premise of this project asserts that MLB Showdown cards should be realistic representations of their player. Not just partly realistic, but as statistically accurate as possible. This is ambitious; the first project of its kind.
+The premise of this project asserts that MLB Showdown cards should be realistic representations of the players they represent. Not just partially (or even mostly) realistic, but as statistically accurate as possible. This is ambitious; to our knowledge it is the first project of its kind.
 
-We do not mean to undermine game design, but rather enhance it. The goal is to give game designers another tool in their repertoire. In fact, it has already been shown that the quest for statistical accuracy may lead to innovative card sets. 
+We do not mean to undermine game design but rather enhance it. The goal is to give game designers another tool in their repertoire. In fact, the quest for statistical accuracy may lead to innovative card sets.
 
-There is an undeniable beauty in producing cards solely based on a finely tuned and crafted algorithm. One of the most difficult concepts in creating cards is cutting small differences. Many cards look very close. Should the differences be defined by the human eye and gut feelings, or by the process? For the first time this has become an option.
+There is an elegant beauty in producing cards solely from a finely tuned, well-crafted algorithm. One of the most difficult concepts in creating cards is 'cutting small differences'. Many cards look very close. Should the differences be defined by the *human eye and gut feelings* or by the *process*? For the first time, this has become a choice.
 
 ### Background concepts and terminology
 
-1. ***Slot***: A position on a player's Showdown card chart, corresponding to one roll of the die. There are 20 slots on a player's chart.
+1. *Slot*: A position on a player's Showdown card chart, corresponding to one roll of the die. There are 20 slots on a player's chart.
 
 2. A 14-16 range on chart is fundamentally equal with a 12-14 displayed chart. Both have 3 slots.
 
 3. A key concept to keep in mind is that a (7,2) batter (one with OB 7, and 2 out values on his chart), could be better than a (9,7) batter. All things equal, higher OB is obviously better. However, even one extra out value can have a significant impact on OBP. Similar for pitcher control.
 
-4. ***Number of possible out results on a card.*** Initially defined as:
+4. *Number of possible out results on a card.* Initially defined as:
 
   - 2 through 7 for batters
   - 14 through 18 for pitchers
   - That is, a batter can have between two and seven out values on his chart. These ranges are arbitrary, informed by the existing card domain.
 
-5. There is no analog to a 1B+ result. The concept of the 1B+ feels “gamey”; they do not have a statistical equivalent. However, we still try to account for them. 
+5. There is no statistical analog to the 1B+ result. Though the concept of the 1B+ feels “gamey”, we still try to account for them.
 
-  - They are actually given when the rounding of singles and doubles leaves room for them, this means that they do not correlate with the traditional “speedy guys get more 1B+ results” rule of thumb.  Admittedly, 1B+ results are given sparingly. 
+  - They are actually given when the rounding of singles and doubles leaves room for them. This means that they do not correlate with the traditional “speedy guys get more 1B+ results” rule of thumb.  Admittedly, 1B+ results are given sparingly.
 
 ### Calculating Charts: Distributing the 20 values and OB/Control
 
@@ -182,30 +184,30 @@ To calculate a card, there are 2 steps (We give the example of a batter, but a p
 
   Example:
   
-  _Batter season HR/PA = .0315._
+  > _Batter season HR/PA = .0315._
   
-  _Batter OB = 8_
+  > _Batter OB = 8_
   
-  _Batter HR results = 3_
+  > _Batter HR results = 3_
   
-  _Pitcher C = 4_ (Again, we actually calculate for all the pitchers in our sample and average the result. Only one pitcher is shown here for simplicity.)
+  > _Pitcher C = 4_ (Again, we actually calculate for all the pitchers in our sample and average the result. Only one pitcher is shown here for simplicity.)
   
-  _Pitcher HR results = 0_
+  > _Pitcher HR results = 0_
 
-  _Using Equation 4 obtains: Homeruns/PlateAppearances = (8 - 4)/20\*3/20 + (20 - (8 - 4))/20\*0/20 = .03_
+  > _Using Equation 4 obtains: Homeruns/PlateAppearances = (8 - 4)/20\*3/20 + (20 - (8 - 4))/20\*0/20 = .03_
 
-  Thus,  _Error = |.03 - .0315| = .0015_
+  > Thus,  _Error = |.03 - .0315| = .0015_
 
-  _Say the other 7 results on the batter's chart also have an error of .0015, then the total error is 8\*.0015 = .012_
+  > _Say the other 7 results on the batter's chart also have an error of .0015, then the total error is 8\*.0015 = .012_
 
-  _The .012 value is then compared with the similar values of each of the other 5 options._
+  > _The .012 value is then compared with the similar values of each of the other 5 options._
 
 
 **Step 5**: Perform the entire process multiple times and choose the chart that is created most often for each player.
 
   The uncertainty in the model comes from Step 2 with the creation of random representative players. In Steps 3 and 4, direct calculations are used, but their result is only as accurate as the sample obtained in Step 2. For this reason, the entire process should be performed multiple times in order to obtain the results that achieve the cards with overall best performance. 
 
-(Best performance defined as the card that, when played, produces statistics similar to those produced during the season that the card is supposed to represent.)
+  (Best performance defined as the card that, when played, produces statistics similar to those produced during the season that the card is supposed to represent.)
 
 ### Calculating Defense & Speed
 
