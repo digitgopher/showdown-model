@@ -2,7 +2,7 @@
 
 Creating MLB Showdown card sets that play as true-to-life as possible.
 
-Additionally, a [game statistics simulator](http://digitgopher.github.io/MLBShowdownStatistics/) has been developed.
+A parallel project is the [game statistics simulator](https://github.com/digitgopher/showdown-sim).
 
 ##### Status
 - Card charts (distributing the 1-20 values): *Implemented*
@@ -11,19 +11,19 @@ Additionally, a [game statistics simulator](http://digitgopher.github.io/MLBShow
 - Fielding: *TBD*
 - IP: *TBD*
 
-##### Data
-
-- Season statistics data from Baseball Reference.
-- Showdown card data compiled from various sources.
-- There are [various](data/showdown/process.vb) [helper](data/br/format_brdata.py) [functions](data/br/insert_brdata.py) (and useful regex notes) to convert raw data into usable MySQL tables.
-
 ##### Usage
 
-- Load data (`cards-tables.sql`, `[yyyy]_all.sql`). Tested with MySQL.
-- Set up R and required libraries. Works without this if you use `single` for opponent (distribution of opponents will not be used).
-- Run `formula.php` command line. *Output is very raw. The results format is still under development, see [releases](https://github.com/digitgopher/MLBShowdownStatistics/releases) for prototypes to date.*
-- Todo: make interface, unhardcode a bunch of things, and/or publish results of the model.
+- Required: [showdown-data](https://github.com/digitgopher/showdown-data), specifically `cards-tables.sql` for card data and `[yyyy]_all.sql` for MLB season data.
+- Optional: Set up R and required libraries. Works without this if you use `single` for opponent (distribution of opponents won't be available).
 
+```
+    formula.php u p [ dist [ num_opp ] ]
+        u = MySQL username
+        p = MySQL password
+        dist = Method to generate random opponents. Default is 'discrete'. Options:'discrete','continuous','single'.
+        num_opp = Number of opponents of each kind to generate. Default is 200. If 'single' is chosen num_opp is always 1.
+```
+*Output is very raw. The results format is still under development, see [releases](https://github.com/digitgopher/MLBShowdownStatistics/releases) for prototypes to date.*
 
 ##### About the game itself
 Play baseball with trading cards. In a nutshell: Roll a 20 sided die twice to determine the result of an at-bat.
