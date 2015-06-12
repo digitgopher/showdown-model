@@ -14,13 +14,13 @@ A parallel project is the [game statistics simulator](https://github.com/digitgo
 ##### Usage
 
 - Required: [showdown-data](https://github.com/digitgopher/showdown-data), specifically `cards-tables.sql` for card data and `[yyyy]_all.sql` for MLB season data.
-- Optional: Set up R and required libraries. Works without this if you use `single` for opponent (distribution of opponents won't be available).
+- Highly Encouraged: Use R and required libraries (truncnorm, rjson, RMySQL). Set `$pathToRExecutable` in `formula.php`. Optional because simulation will run without R if `single` is used for `num_opp`. In this case a distribution of opponents won't be available, as there is only one defined opponent card representing a 'standard' batter/pitcher.
 
 ```
-    formula.php u p [ dist [ num_opp ] ]
+    php formula.php u p [ dist [ num_opp ] ]
         u = MySQL username
         p = MySQL password
-        dist = Method to generate random opponents. Default is 'discrete'. Options:'discrete','continuous','single'.
+        dist = Method to generate random opponents. Default (and only recommended option) is 'discrete'. Options:'discrete','continuous','single'.
         num_opp = Number of opponents of each kind to generate. Default is 200. If 'single' is chosen num_opp is always 1.
 ```
 *Output is very raw. The results format is still under development, see [releases](https://github.com/digitgopher/MLBShowdownStatistics/releases) for prototypes to date.*

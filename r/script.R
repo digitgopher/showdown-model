@@ -12,6 +12,7 @@ args = commandArgs(trailingOnly = TRUE)
 # Define functions
 
 # Right now static, get from db
+# Note this function is not to be used for now - discrete has better theoretical underpinnings.
 Continuous <- function(x){
   pit_means <- c(2, 4.5, 5.5, 4, 1.5, 1.8, .65, .05);
   pit_sds <- c(.5, 1.8, 1.8, 1.8, 1, 1.2, .5, .5);
@@ -77,46 +78,46 @@ Continuous <- function(x){
 
 Discrete <- function(x){
   batterQuery = "select `value`,
-       sum(`colName` = 'SO1') as SO,
-       sum(`colName` = 'GB1') as GB,
-       sum(`colName` = 'FB1') as FB,
-       sum(`colName` = 'BB1') as BB,
-       sum(`colName` = '1B1') as 1B,
-       sum(`colName` = '1Bplus1') as `1B+`,
-       sum(`colName` = '2B1') as 2B,
-       sum(`colName` = '3B1') as 3B,
-       sum(`colName` = 'HR1') as HR
-from (select 'SO1' as `colName`, SO1 as `value` from battercards union all
-      select 'GB1', GB1 from battercards union all
-      select 'FB1', FB1 from battercards union all
-      select 'BB1', BB1 from battercards union all
-      select '1B1', 1B1 from battercards union all
-      select '1Bplus1', 1Bplus1 from battercards union all
-      select '2B1', 2B1 from battercards union all
-      select '3B1', 3B1 from battercards union all
-      select 'HR1', HR1 from battercards
-     ) temp
-group by `value`;"
+    sum(`colName` = 'SO') as SO,
+    sum(`colName` = 'GB') as GB,
+    sum(`colName` = 'FB') as FB,
+    sum(`colName` = 'BB') as BB,
+    sum(`colName` = '1B') as 1B,
+    sum(`colName` = '1Bplus') as `1B+`,
+    sum(`colName` = '2B') as 2B,
+    sum(`colName` = '3B') as 3B,
+    sum(`colName` = 'HR') as HR
+  from (select 'SO' as `colName`, SO as `value` from `batter-cards` where yearID <= 2001 union all
+    select 'GB', GB from `batter-cards` where yearID <= 2001 union all
+    select 'FB', FB from `batter-cards` where yearID <= 2001 union all
+    select 'BB', BB from `batter-cards` where yearID <= 2001 union all
+    select '1B', 1B from `batter-cards` where yearID <= 2001 union all
+    select '1Bplus', 1Bplus from `batter-cards` where yearID <= 2001 union all
+    select '2B', 2B from `batter-cards` where yearID <= 2001 union all
+    select '3B', 3B from `batter-cards` where yearID <= 2001 union all
+    select 'HR', HR from `batter-cards` where yearID <= 2001 
+    ) temp
+  group by `value`;"
   
   pitcherQuery = "select `value`,
-     sum(`colName` = 'PU1') as PU,
-       sum(`colName` = 'SO1') as SO,
-       sum(`colName` = 'GB1') as GB,
-       sum(`colName` = 'FB1') as FB,
-       sum(`colName` = 'BB1') as BB,
-       sum(`colName` = '1B1') as 1B,
-       sum(`colName` = '2B1') as 2B,
-       sum(`colName` = 'HR1') as HR
-from (select 'PU1' as `colName`, PU1 as `value` from pitchercards union all
-      select 'SO1', SO1 from pitchercards union all
-	    select 'GB1', GB1 from pitchercards union all
-      select 'FB1', FB1 from pitchercards union all
-      select 'BB1', BB1 from pitchercards union all
-      select '1B1', 1B1 from pitchercards union all
-      select '2B1', 2B1 from pitchercards union all
-      select 'HR1', HR1 from pitchercards
-     ) temp
-group by `value`;"
+       sum(`colName` = 'PU') as PU,
+       sum(`colName` = 'SO') as SO,
+       sum(`colName` = 'GB') as GB,
+       sum(`colName` = 'FB') as FB,
+       sum(`colName` = 'BB') as BB,
+       sum(`colName` = '1B') as 1B,
+       sum(`colName` = '2B') as 2B,
+       sum(`colName` = 'HR') as HR
+    from (select 'PU' as `colName`, PU as `value` from `pitcher-cards` where yearID <= 2001 union all
+      select 'SO', SO from `pitcher-cards` where yearID <= 2001 union all
+	    select 'GB', GB from `pitcher-cards` where yearID <= 2001 union all
+      select 'FB', FB from `pitcher-cards` where yearID <= 2001 union all
+      select 'BB', BB from `pitcher-cards` where yearID <= 2001 union all
+      select '1B', 1B from `pitcher-cards` where yearID <= 2001 union all
+      select '2B', 2B from `pitcher-cards` where yearID <= 2001 union all
+      select 'HR', HR from `pitcher-cards` where yearID <= 2001
+      ) temp
+    group by `value`;"
   
   pit_categories <- c('PU', 'SO', 'GB', 'FB', 'BB', '1B','2B', 'HR')
   bat_categories <- c('SO', 'GB', 'FB', 'BB', '1B', '1B+', '2B', '3B', 'HR')
@@ -155,10 +156,10 @@ group by `value`;"
   msds = apply(m,2,sd)
   
   #Get ob/con values, since we can't handle them in the matrix already created
-  batterQuery = "SELECT onbase AS OB, count(*) AS COUNT FROM battercards GROUP BY onbase;"
+  batterQuery = "SELECT onbase AS OB, count(*) AS COUNT FROM `batter-cards` GROUP BY onbase;"
   OB = dbGetQuery(mydb, batterQuery)
   OB = sample(OB[,1],x,replace=TRUE,prob=OB[,2])
-  pitcherQuery = "SELECT control AS C, count(*) AS COUNT FROM pitchercards GROUP BY control;"
+  pitcherQuery = "SELECT control AS C, count(*) AS COUNT FROM `pitcher-cards` GROUP BY control;"
   C = dbGetQuery(mydb, pitcherQuery)
   C = sample(C[,1],x,replace=TRUE,prob=C[,2])
   
