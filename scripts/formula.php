@@ -123,13 +123,13 @@ $mysqli->close();
 function playersToCards($players, $type, $avgOpp){
     switch ($type) {
         case 'b':
-            $minNumOuts = 2; // These values will be used to pick the
-            $maxNumOuts = 7; // most appropriate OB vs. num outs.
+            $minVal = 4; // Cards will be calculated for these values.
+            $maxVal = 12;
             $ob_ctrl = 'OB';
             break;
         case 'p':
-            $minNumOuts = 14;
-            $maxNumOuts = 18;
+            $minVal = 0;
+            $maxVal = 6;
             $ob_ctrl = 'C';
             break;
         default:
@@ -145,7 +145,7 @@ function playersToCards($players, $type, $avgOpp){
         $difsums = array();
         $result = array();
         // Loop through number of outs on the card to find ideal amount
-        for ($index = $minNumOuts; $index <= $maxNumOuts; $index++) {
+        for ($index = $minVal; $index <= $maxVal; $index++) {
             $result[$index] = $player->getRawCard($avgOpp, $index);
             $diffs[$index] = $player->computePercentDifferent(processChart($result[$index]), $avgOpp);
         }

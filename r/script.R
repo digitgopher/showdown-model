@@ -156,10 +156,10 @@ Discrete <- function(x){
   msds = apply(m,2,sd)
   
   #Get ob/con values, since we can't handle them in the matrix already created
-  batterQuery = "SELECT onbase AS OB, count(*) AS COUNT FROM `batter-cards` GROUP BY onbase;"
+  batterQuery = "SELECT onbase AS OB, count(*) AS COUNT FROM `batter-cards` WHERE yearID <= 2001 GROUP BY onbase;"
   OB = dbGetQuery(mydb, batterQuery)
   OB = sample(OB[,1],x,replace=TRUE,prob=OB[,2])
-  pitcherQuery = "SELECT control AS C, count(*) AS COUNT FROM `pitcher-cards` GROUP BY control;"
+  pitcherQuery = "SELECT control AS C, count(*) AS COUNT FROM `pitcher-cards` WHERE yearID <= 2001 GROUP BY control;"
   C = dbGetQuery(mydb, pitcherQuery)
   C = sample(C[,1],x,replace=TRUE,prob=C[,2])
   

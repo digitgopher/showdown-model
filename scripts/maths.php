@@ -403,7 +403,21 @@ function roundChart($chart, $firstKey){
                     }
                 }
             }
-            $temp[$curKey]--;
+            if($curKey == ''){
+                // There was no third 'most off' value, so use one of the first ones 
+                if($temp[$markedKey] > 0){
+                    $temp[$markedKey]--;
+                }
+                else if($temp[$otherMarkedKey] > 0){
+                    $temp[$otherMarkedKey]--;
+                }
+                else{
+                    echo "I'm at a loss, but I think it worked.\n";
+                }
+            }
+            else{
+                echo "WHAT.\n";
+            }
             break;
         default:
             echo "Shouln't get here EVERRRRRRRRRRRRRRR!! Count value = ".$count."\n";

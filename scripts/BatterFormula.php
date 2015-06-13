@@ -11,7 +11,7 @@ class BatterFormula
     }
     
     // Get chart from data
-    public function getRawCard($avgPitcher, $bouts){
+    public function getRawCard($avgPitcher, $OB){
         
         $batted_outs = $this->real['AB'] - $this->real['SO'] - $this->real['H'];
         $GBouts_tot = $this->real['G/F']*$batted_outs/(1+$this->real['G/F']);
@@ -22,7 +22,6 @@ class BatterFormula
         if(!is_array($avgPitcher['C'])){ // only one average pitcher given
             $pC = $avgPitcher['C'];
             $pouts = $avgPitcher['PU'] + $avgPitcher['SO'] + $avgPitcher['GB'] + $avgPitcher['FB'];
-            $OB = $this->computeOB($bouts,$this->real['OBP'],$pC,$pouts);
             return $this->getRawCardi($avgPitcher, $pC, $OB, $GBouts_tot, $FBouts_tot);
         }
         else{// multiple batters passed in
@@ -32,7 +31,6 @@ class BatterFormula
                 //echo $pC." ";
                 $pouts = $avgPitcher['PU'][$i] + $avgPitcher['SO'][$i] + $avgPitcher['GB'][$i] + $avgPitcher['FB'][$i];
                 //echo $pouts." ";
-                $OB = $this->computeOB($bouts,$this->real['OBP'],$pC,$pouts);
                 $curPitcher = array();
                 foreach ($avgPitcher as $key => $dontcareaboutthis) {
                     $curPitcher[$key] = $avgPitcher[$key][$i];
@@ -79,7 +77,7 @@ class BatterFormula
             '2B' => $this->computeBatterNum_B123H($OB, $this->real['2B'], $this->real['PA'], $pC, $avgPitcher['2B']), 
             '3B' => $this->computeBatterNum_B123H($OB, $this->real['3B'], $this->real['PA'], $pC, 0),
             'HR' => $this->computeBatterNum_B123H($OB, $this->real['HR'], $this->real['PA'], $pC, $avgPitcher['HR']));
-
+        
         $negs = array();
         $sumOuts = 0;
         $sumNonOuts = 0;
@@ -104,109 +102,27 @@ class BatterFormula
                 }
             }
         }
-        //print_r($negs);//exit;
-        
-        // Normalize, because we can't make the pitcher worse, as the pitcher is the input
+        //print_r(array_sum($chart));print_r(array_sum($negs));echo "\n";
+        // Normalize EQUALLY, because we can't make the pitcher worse, as the pitcher is the input
         foreach ($negs as $key => $value) {
-            switch ($key) {
-                // Outs
-                case 'SO':
-                    $sum = $chart['GB']+$chart['FB'];
-                    if($sum == 0){
-                        break; //everybody is 0! must be realllllly unproportionate somehow...
-                    }
-                    $chart['GB'] += $chart['GB']/$sum*$value;
-                    $chart['FB'] += $chart['FB']/$sum*$value;
-                    break;
-                case 'GB':
-                    $sum = $chart['SO']+$chart['FB'];
-                    if($sum == 0){
-                        break; //everybody is 0!
-                    }
-                    $chart['SO'] += $chart['SO']/$sum*$value;
-                    $chart['FB'] += $chart['FB']/$sum*$value;
-                    break;
-                case 'FB':
-                    $sum = $chart['SO']+$chart['GB'];
-                    if($sum == 0){
-                        break; //everybody is 0!
-                    }
-                    $chart['GB'] += $chart['GB']/$sum*$value;
-                    $chart['SO'] += $chart['SO']/$sum*$value;
-                    break;
-                
-                // Non-outs
-                case 'BB':
-                    $sum = $chart['1B']+$chart['2B']+$chart['3B']+$chart['HR'];
-                    $chart['1B'] += $chart['1B']/$sum*$value;
-                    $chart['2B'] += $chart['2B']/$sum*$value;
-                    $chart['3B'] += $chart['3B']/$sum*$value;
-                    $chart['HR'] += $chart['HR']/$sum*$value;
-                    break;
-                case '1B':
-                    $sum = $chart['BB']+$chart['2B']+$chart['3B']+$chart['HR'];
-                    $chart['BB'] += $chart['BB']/$sum*$value;
-                    $chart['2B'] += $chart['2B']/$sum*$value;
-                    $chart['3B'] += $chart['3B']/$sum*$value;
-                    $chart['HR'] += $chart['HR']/$sum*$value;
-                    break;
-                case '2B':
-                    $sum = $chart['BB']+$chart['1B']+$chart['3B']+$chart['HR'];
-                    $chart['BB'] += $chart['BB']/$sum*$value;
-                    $chart['1B'] += $chart['1B']/$sum*$value;
-                    $chart['3B'] += $chart['3B']/$sum*$value;
-                    $chart['HR'] += $chart['HR']/$sum*$value;
-                    break;
-                case '3B':
-                    $sum = $chart['BB']+$chart['1B']+$chart['2B']+$chart['HR'];
-                    $chart['BB'] += $chart['BB']/$sum*$value;
-                    $chart['1B'] += $chart['1B']/$sum*$value;
-                    $chart['2B'] += $chart['2B']/$sum*$value;
-                    $chart['HR'] += $chart['HR']/$sum*$value;
-                    break;
-                case 'HR':
-                    $sum = $chart['BB']+$chart['1B']+$chart['2B']+$chart['3B'];
-                    $chart['BB'] += $chart['BB']/$sum*$value;
-                    $chart['1B'] += $chart['1B']/$sum*$value;
-                    $chart['2B'] += $chart['2B']/$sum*$value;
-                    $chart['3B'] += $chart['3B']/$sum*$value;
-                    break;
-
-                default:
-                    // Debugging...
-                    echo $this->real['OBP']." ".$key." ".$value." Shouldn't get here ever.";
-                    break;
+            $sum = array_sum($chart) - $chart['OB'] - $chart['1B+'] - $chart[$key];
+            foreach ($chart as $k => &$v) {
+                if($k != 'OB' && $k != '1B+'){
+                    $v += $v / $sum * $value;
+                }
             }
         }
-        //echo $sumOuts."\n".$sumNonOuts."\n";
         
+        // Throw on dummy values, doesn't matter but needs something to keep going
+        if(array_sum($chart) - $chart['OB'] == 0){
+            $chart = array_map(function($val) { return $val + (20 / 8); },$chart);
+        }
+        if(round(array_sum($chart) - $chart['OB']) < 20){
+            print_r($chart);print_r($negs);printf("%.40f\n", $rrr);exit;
+        }
         return $chart;
     }
     
-    // Will not return a negative onbase!
-    function computeOB($b_outs, $obp, $pC, $p_outs){
-        // General form:
-        // obp = chance of batters chart * chance of getting onbase on batters chart + chance of pitchers chart * chance of getting onbase on pitchers chart
-        // $obp = ($OB-$pC)/20*(20-$b_outs)/20 + (20-($OB-$pC))/20*(20-$p_outs)/20
-        //
-        // Equation solved by WolphramAlpha as follows:
-        // a = ((b - c)/20*(20-d)/20) + ((20 - (b - c))/20*(20-e)/20) solve for b
-        // 
-        // where:
-        //      a = obp
-        //      b = OB
-        //      c = C
-        //      d = b_outs
-        //      e = p_outs
-        //
-        // Only Restriction: d != e
-        //echo $b_outs." ".$obp." ".$pC." ".$p_outs;
-        $OB = (-400*$obp + $pC*$b_outs - $pC*$p_outs - 20*$p_outs + 400)/($b_outs - $p_outs);
-        if($OB < 0){
-            return 0;
-        }
-        return $OB; 
-    }
 
     //function computeBatterOuts($OB, $obp, $pC, $p_outs){
     //    // General form:

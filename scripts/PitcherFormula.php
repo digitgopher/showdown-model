@@ -11,26 +11,25 @@ class PitcherFormula
     }
     
     // Get chart from data
-    public function getRawCard($avgBatter, $pouts){
+    public function getRawCard($avgBatter, $C){
         
         // truth statements:
         //      $batted_outs = $GBouts_tot + $Fly_outs
         //      $Fly_outs = $PUouts_tot + $FBouts_tot
-        $batted_outs = $this->real['AB'] - $this->real['SO'] - $this->real['H'];
+        $batted_outs = $this->real['PA'] - $this->real['BB'] - $this->real['SO'] - $this->real['H'];
         $GBouts_tot = $this->real['G/F']*$batted_outs/(1+$this->real['G/F']);
         $Fly_outs = $batted_outs - $GBouts_tot; // = (1/$this->real['G/F'])*$batted_outs/(1+(1/$this->real['G/F']));
         // Split fly outs into FB and PU
         $PUouts_tot = $Fly_outs*$this->real['PUpct']; // The original query pads the number for Flys into the outfield that aren't deep enough to tag, since the official statistic only counts along the lines of 'balls in the air in the infield'. PUpct should never be over 60% so we don't need value checking.
         $FBouts_tot = $Fly_outs - $PUouts_tot;
         //echo $C." ".$batted_outs." ".$Fly_outs." ".$PUouts_tot." ".$FBouts_tot." ".$GBouts_tot;
-        
+
         
         // Get control, using either an average batter or a set of batters (generated from a distribution),
         // whatever whas passed in. Parse the different data structures.
         if(!is_array($avgBatter['OB'])){ // only one average batter given
             $OB = $avgBatter['OB'];
             $bouts = $avgBatter['SO'] + $avgBatter['GB'] + $avgBatter['FB'];
-            $C = $this->computeControl($pouts, $this->real['OBP'], $OB, $bouts);
             return $this->getRawCardi($avgBatter, $OB, $C, $PUouts_tot, $GBouts_tot, $FBouts_tot);
         }
         else{// multiple batters passed in
@@ -40,7 +39,6 @@ class PitcherFormula
                 //echo $OB." ";
                 $bouts = $avgBatter['SO'][$i] + $avgBatter['GB'][$i] + $avgBatter['FB'][$i];
                 //echo $bouts." ";
-                $C = $this->computeControl($pouts, $this->real['OBP'], $OB, $bouts);
                 $curBatter = array();
                 foreach ($avgBatter as $key => $dontcareaboutthis) {
                     $curBatter[$key] = $avgBatter[$key][$i];
@@ -86,7 +84,7 @@ class PitcherFormula
             '1B' => $this->computePitcherSlots($C, $this->real['1B'], $this->real['PA'], $OB, $avgBatter['1B'] + $avgBatter['1B+']/2),
             '2B' => $this->computePitcherSlots($C, $this->real['2B'] + $this->real['3B'], $this->real['PA'], $OB, $avgBatter['1B+']/2 + $avgBatter['2B'] + $avgBatter['3B']), 
             'HR' => $this->computePitcherSlots($C, $this->real['HR'], $this->real['PA'], $OB, $avgBatter['HR']));
-
+        
         $negs = array();
         $sumOuts = 0;
         $sumNonOuts = 0;
@@ -113,95 +111,26 @@ class PitcherFormula
         }
         //print_r($negs);
         
-        // Normalize, because we can't make the pitcher worse, as the pitcher is the input
+        // Normalize EQUALLY, because we can't make the pitcher worse, as the pitcher is the input
         foreach ($negs as $key => $value) {
-            switch ($key) {
-                // Outs
-                case 'PU':
-                    $sum = $chart['SO']+$chart['GB']+$chart['FB'];
-                    $chart['SO'] += $chart['SO']/$sum*$value;
-                    $chart['GB'] += $chart['GB']/$sum*$value;
-                    $chart['FB'] += $chart['FB']/$sum*$value;
-                    break;
-                case 'SO':
-                    $sum = $chart['PU']+$chart['GB']+$chart['FB'];
-                    $chart['PU'] += $chart['PU']/$sum*$value;
-                    $chart['GB'] += $chart['GB']/$sum*$value;
-                    $chart['FB'] += $chart['FB']/$sum*$value;
-                    break;
-                case 'GB':
-                    $sum = $chart['PU']+$chart['SO']+$chart['FB'];
-                    $chart['PU'] += $chart['PU']/$sum*$value;
-                    $chart['SO'] += $chart['SO']/$sum*$value;
-                    $chart['FB'] += $chart['FB']/$sum*$value;
-                    break;
-                case 'FB':
-                    $sum = $chart['PU']+$chart['SO']+$chart['GB'];
-                    $chart['PU'] += $chart['PU']/$sum*$value;
-                    $chart['SO'] += $chart['SO']/$sum*$value;
-                    $chart['GB'] += $chart['GB']/$sum*$value;
-                    break;
-                
-                // Non-outs
-                case 'BB':
-                    $sum = $chart['1B']+$chart['2B']+$chart['HR'];
-                    $chart['1B'] += $chart['1B']/$sum*$value;
-                    $chart['2B'] += $chart['2B']/$sum*$value;
-                    $chart['HR'] += $chart['HR']/$sum*$value;
-                    break;
-                case '1B':
-                    $sum = $chart['BB']+$chart['2B']+$chart['HR'];
-                    $chart['BB'] += $chart['BB']/$sum*$value;
-                    $chart['2B'] += $chart['2B']/$sum*$value;
-                    $chart['HR'] += $chart['HR']/$sum*$value;
-                    break;
-                case '2B':
-                    $sum = $chart['BB']+$chart['1B']+$chart['HR'];
-                    $chart['BB'] += $chart['BB']/$sum*$value;
-                    $chart['1B'] += $chart['1B']/$sum*$value;
-                    $chart['HR'] += $chart['HR']/$sum*$value;
-                    break;
-                case 'HR':
-                    $sum = $chart['BB']+$chart['1B']+$chart['2B'];
-                    $chart['BB'] += $chart['BB']/$sum*$value;
-                    $chart['1B'] += $chart['1B']/$sum*$value;
-                    $chart['2B'] += $chart['2B']/$sum*$value;
-                    break;
-
-                default:
-                    echo "Shouldn't get here ever.";
-                    break;
+            $sum = array_sum($chart) - $chart['C'] - $chart[$key];
+            foreach ($chart as $k => &$v) {
+                if($k != 'C'){
+                    $v += $v / $sum * $value;
+                }
             }
         }
         //echo $sumOuts."\n".$sumNonOuts."\n";
         
-        return $chart;
-    }
-    
-    // Given how many outs on pitcher's chart and the average batter, what should the control be for real-life OOB?
-    // Will not return a negative control!
-    function computeControl($p_outs, $obp, $OB, $b_outs){
-        // General form:
-        // obp = chance of batters chart * chance of getting onbase on batters chart + chance of pitchers chart * chance of getting onbase on pitchers chart
-        // $obp = ($OB-$pC)/20*(20-$b_outs)/20 + (20-($OB-$pC))/20*(20-$p_outs)/20
-        //
-        // Equation solved by WolphramAlpha as follows:
-        // a = ((b - c)/20*(20-d)/20) + ((20 - (b - c))/20*(20-e)/20) solve for c
-        // 
-        // where:
-        //      a = obp
-        //      b = OB
-        //      c = C
-        //      d = b_outs
-        //      e = p_outs
-        //
-        // Only Restriction: d != e
-
-        $pC = (400*$obp + $OB*($b_outs - $p_outs) + 20*($p_outs - 20))/($b_outs - $p_outs);
-        if($pC < 0){
-            return 0;
+        // Throw on dummy values, doesn't matter but needs something to keep going
+        if(array_sum($chart) - $chart['C'] == 0){
+            $chart = array_map(function($val) { return $val + (20 / 8); },$chart);
         }
-        return $pC; 
+        if(round(array_sum($chart) - $chart['C']) < 20){
+            print_r($chart);print_r($negs);exit;
+        }
+        
+        return $chart;
     }
 
     // Returns the exact number of slots on charts that should be given if the pitcher
