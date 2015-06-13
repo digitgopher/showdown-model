@@ -4,9 +4,7 @@ class PitcherFormula
     // Real-life statistical values, pulled in from database
     public $real;
 
-    // Constructor for a pitcher
     function __construct($rawData){
-        // Set real-life statistics data structure
         $this->real = $rawData;
     }
     
@@ -22,48 +20,38 @@ class PitcherFormula
         // Split fly outs into FB and PU
         $PUouts_tot = $Fly_outs*$this->real['PUpct']; // The original query pads the number for Flys into the outfield that aren't deep enough to tag, since the official statistic only counts along the lines of 'balls in the air in the infield'. PUpct should never be over 60% so we don't need value checking.
         $FBouts_tot = $Fly_outs - $PUouts_tot;
-        //echo $C." ".$batted_outs." ".$Fly_outs." ".$PUouts_tot." ".$FBouts_tot." ".$GBouts_tot;
-
         
-        // Get control, using either an average batter or a set of batters (generated from a distribution),
-        // whatever whas passed in. Parse the different data structures.
-        if(!is_array($avgBatter['OB'])){ // only one average batter given
+        // only one average batter given
+        if(!is_array($avgBatter['OB'])){
             $OB = $avgBatter['OB'];
             $bouts = $avgBatter['SO'] + $avgBatter['GB'] + $avgBatter['FB'];
             return $this->getRawCardi($avgBatter, $OB, $C, $PUouts_tot, $GBouts_tot, $FBouts_tot);
         }
-        else{// multiple batters passed in
+        // multiple batters passed in
+        else{
             $pitchers = array();
             for ($i = 0; $i < count($avgBatter['OB']); $i++) {
                 $OB = $avgBatter['OB'][$i];
-                //echo $OB." ";
                 $bouts = $avgBatter['SO'][$i] + $avgBatter['GB'][$i] + $avgBatter['FB'][$i];
-                //echo $bouts." ";
                 $curBatter = array();
                 foreach ($avgBatter as $key => $dontcareaboutthis) {
                     $curBatter[$key] = $avgBatter[$key][$i];
                 }
-                //print_r($curBatter);exit;
                 $pitchers[] = $this->getRawCardi($curBatter, $OB, $C, $PUouts_tot, $GBouts_tot, $FBouts_tot);
             }
-//            print_r($pitchers);
             // Average them now, after the fact rather than before!
             // Set as 0 so we can ++
             $sums = array_fill_keys(array_keys($pitchers[0]), 0);
             // Add all categories
             foreach ($pitchers as $key => $pitcher) {
                 foreach ($pitcher as $k => $v) {
-                    //echo $k; exit;
                     $sums[$k] += $v;
                 }
             }
             // Divide to get average
-//            print_r($pitchers);
-//            print_r($sums);
             foreach ($sums as $key => &$value) {
                 $value /= count($pitchers);
             }
-//            print_r($sums);exit;
             return $sums;
         }
         echo "Should never get here. Exiting!";
@@ -74,7 +62,7 @@ class PitcherFormula
     private function getRawCardi($avgBatter, $OB, $C, $PUouts_tot, $GBouts_tot, $FBouts_tot){
         // The sum of all the values should add up to PA if it is going to work.
         // Note we have to divide by number of outs so that the calculated negatives don't throw off the balance
-        $chart = array('C' => $C,// computePitcherSlots($pC, $metric, $PA, $OB, $b_result)
+        $chart = array('C' => $C,
             'PU' => $this->computePitcherSlots($C, $PUouts_tot, $this->real['PA'], $OB, 0),
             'SO' => $this->computePitcherSlots($C, $this->real['SO'], $this->real['PA'], $OB, $avgBatter['SO']),
             'GB' => $this->computePitcherSlots($C, $GBouts_tot, $this->real['PA'], $OB, $avgBatter['GB']) ,
@@ -86,32 +74,15 @@ class PitcherFormula
             'HR' => $this->computePitcherSlots($C, $this->real['HR'], $this->real['PA'], $OB, $avgBatter['HR']));
         
         $negs = array();
-        $sumOuts = 0;
-        $sumNonOuts = 0;
-        // Handle negative chart values: replace with 0 but keep the value
+        // Handle negative chart values: replace with 0 but keep the value so it can be dealt with
         foreach ($chart as $key => $value) {
             if($value < 0){
                 $chart[$key] = 0;
                 $negs[$key] = $value;
             }
-            else{
-                if($key == 'PU' || $key == 'SO' || $key == 'GB' || $key == 'FB'){
-                    $sumOuts += $value;
-                }
-                elseif($key == 'BB' || $key == '1B' || $key == '2B' || $key == 'HR'){
-                    $sumNonOuts += $value;
-                }
-                elseif($key == 'C'){
-                    // Do nothing
-                }
-                else{
-                    echo "Should never get here!";
-                }
-            }
         }
-        //print_r($negs);
         
-        // Normalize EQUALLY, because we can't make the pitcher worse, as the pitcher is the input
+        // Deal with neg values. Normalize EQUALLY, because we can't make the pitcher worse, as the pitcher is the input.
         foreach ($negs as $key => $value) {
             $sum = array_sum($chart) - $chart['C'] - $chart[$key];
             foreach ($chart as $k => &$v) {
@@ -120,7 +91,6 @@ class PitcherFormula
                 }
             }
         }
-        //echo $sumOuts."\n".$sumNonOuts."\n";
         
         // Throw on dummy values, doesn't matter but needs something to keep going
         if(array_sum($chart) - $chart['C'] == 0){
@@ -129,7 +99,6 @@ class PitcherFormula
         if(round(array_sum($chart) - $chart['C']) < 20){
             print_r($chart);print_r($negs);exit;
         }
-        
         return $chart;
     }
 
@@ -171,12 +140,8 @@ class PitcherFormula
         $FBouts_tot = $f - $PUouts_tot;
         // Again, using the formula:
         // realLifeCount / plateApperances = chance of batters chart * chance of getting that result on batters chart + chance of pitchers chart * chance of getting that result on pitchers chart
-//        print_r($pitcher);
-//        print_r($batters);
-//        print_r($this->real);
         // Define all 3 at once
         $diffs = $reals = $calcs = array_fill_keys(array_keys($pitcher), 0);
-        //print_r($calcs);
         // Get $reals = real life statistics
         $reals['C'] = $this->real['OBP'];
         $reals['PU'] = $PUouts_tot / $this->real['PA'];

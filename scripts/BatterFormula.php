@@ -4,9 +4,7 @@ class BatterFormula
     // Real-life statistical values, pulled in from database
     public $real;
 
-    // Constructor for a batter
     function __construct($rawData){
-        // Set real-life statistics data structure
         $this->real = $rawData;
     }
     
@@ -17,45 +15,37 @@ class BatterFormula
         $GBouts_tot = $this->real['G/F']*$batted_outs/(1+$this->real['G/F']);
         $FBouts_tot = $batted_outs - $GBouts_tot; // = (1/$this->real['G/F'])*$batted_outs/(1+(1/$this->real['G/F'])); 
         
-        // Get onbase, using either an average pitcher or a set of pitchers (generated from a distribution),
-        // whatever whas passed in. Parse the different data structures.
-        if(!is_array($avgPitcher['C'])){ // only one average pitcher given
+        // only one average pitcher given
+        if(!is_array($avgPitcher['C'])){
             $pC = $avgPitcher['C'];
             $pouts = $avgPitcher['PU'] + $avgPitcher['SO'] + $avgPitcher['GB'] + $avgPitcher['FB'];
             return $this->getRawCardi($avgPitcher, $pC, $OB, $GBouts_tot, $FBouts_tot);
         }
-        else{// multiple batters passed in
+        // multiple batters passed in
+        else{
             $batters = array();
             for ($i = 0; $i < count($avgPitcher['C']); $i++) {
                 $pC = $avgPitcher['C'][$i];
-                //echo $pC." ";
                 $pouts = $avgPitcher['PU'][$i] + $avgPitcher['SO'][$i] + $avgPitcher['GB'][$i] + $avgPitcher['FB'][$i];
-                //echo $pouts." ";
                 $curPitcher = array();
                 foreach ($avgPitcher as $key => $dontcareaboutthis) {
                     $curPitcher[$key] = $avgPitcher[$key][$i];
                 }
-                //print_r($curBatter);exit;
                 $batters[] = $this->getRawCardi($curPitcher, $pC, $OB, $GBouts_tot, $FBouts_tot);;
             }
-//            print_r($pitchers);
             // Average them now, after the fact rather than before!
             // Set as 0 so we can ++
             $sums = array_fill_keys(array_keys($batters[0]), 0);
             // Add all categories
             foreach ($batters as $key => $batter) {
                 foreach ($batter as $k => $v) {
-                    //echo $k; exit;
                     $sums[$k] += $v;
                 }
             }
             // Divide to get average
-//            print_r($batters);
-//            print_r($sums);
             foreach ($sums as $key => &$value) {
                 $value /= count($batters);
             }
-            //print_r($sums);//exit;
             return $sums;
         }
         echo "Should never get here. Exiting!";
@@ -79,30 +69,13 @@ class BatterFormula
             'HR' => $this->computeBatterNum_B123H($OB, $this->real['HR'], $this->real['PA'], $pC, $avgPitcher['HR']));
         
         $negs = array();
-        $sumOuts = 0;
-        $sumNonOuts = 0;
         // Handle negative chart values: replace with 0 but keep the value
         foreach ($chart as $key => $value) {
             if($value < 0){
                 $chart[$key] = 0;
                 $negs[$key] = $value;
             }
-            else{
-                if($key == 'SO' || $key == 'GB' || $key == 'FB'){
-                    $sumOuts += $value;
-                }
-                elseif($key == 'BB' || $key == '1B' || $key == '2B' || $key == '3B' || $key == 'HR'){
-                    $sumNonOuts += $value;
-                }
-                elseif($key == 'OB' || $key == '1B+'){
-                    // Do nothing
-                }
-                else{
-                    echo "Should never get here!";
-                }
-            }
         }
-        //print_r(array_sum($chart));print_r(array_sum($negs));echo "\n";
         // Normalize EQUALLY, because we can't make the pitcher worse, as the pitcher is the input
         foreach ($negs as $key => $value) {
             $sum = array_sum($chart) - $chart['OB'] - $chart['1B+'] - $chart[$key];
@@ -122,29 +95,6 @@ class BatterFormula
         }
         return $chart;
     }
-    
-
-    //function computeBatterOuts($OB, $obp, $pC, $p_outs){
-    //    // General form:
-    //    // obp = chance of batters chart * chance of getting onbase on batters chart + chance of pitchers chart * chance of getting onbase on pitchers chart
-    //    // $obp = ($OB-$pC)/20*(20-$b_outs)/20 + (20-($OB-$pC))/20*(20-$p_outs)/20
-    //    //
-    //    // Equation solved by WolphramAlpha as follows:
-    //    // a = ((b - c)/20*(20-d)/20) + ((20 - (b - c))/20*(20-e)/20) solve for d
-    //    // 
-    //    // where:
-    //    //      a = obp
-    //    //      b = OB
-    //    //      c = C
-    //    //      d = b_outs
-    //    //      e = p_outs
-    //    //
-    //    // Only Restriction: b != c
-    //    
-    //    $b_outs = (-400*$obp + $p_outs*($OB - $pC - 20) + 400)/($OB - $pC);
-    //    // Negative means the average pitcher needs to be worse!
-    //    return $b_outs; 
-    //}
 
     // Returns the exact number of slots on charts that should be given if the batter
     // is to have the same performance as real life, per pitcher passed in.
@@ -183,12 +133,8 @@ class BatterFormula
         
         // Again, using the formula:
         // realLifeCount / plateApperances = chance of batters chart * chance of getting that result on batters chart + chance of pitchers chart * chance of getting that result on pitchers chart
-//        print_r($batter);
-//        print_r($pitchers);
-//        print_r($this->real);
         // Define all 3 at once
         $diffs = $reals = $calcs = array_fill_keys(array_keys($batter), 0);
-        //print_r($calcs);
         // Get $reals = real life statistics
         $reals['OB'] = $this->real['OBP'];
         $reals['SO'] = $this->real['SO'] / $this->real['PA'];
