@@ -2,7 +2,6 @@
 // Performs simulation and output results.
 
 // **********Setup
-$pathToRExecutable = 'C:\dev\R-3.1.2\bin\Rscript.exe';
 require 'BatterFormula.php';
 require 'PitcherFormula.php';
 require 'data.php';
@@ -11,23 +10,25 @@ include 'maths.php';
 $randomMethodList = ['discrete','continuous','single'];
 // Command line usage
 if(// Input errors
-    count($argv) < 3 || 
-    (isset($argv[3]) && !in_array($argv[3],$randomMethodList)) || 
-    (isset($argv[4]) && (string)(int)($argv[4]) != $argv[4])
+    count($argv) < 5 ||
+    (isset($argv[5]) && !in_array($argv[5],$randomMethodList)) ||
+    (isset($argv[6]) && (string)(int)($argv[6]) != $argv[6])
     ){
-    print "\nArgument usage: u,p[,dist[,num_opp]]\n
+    print "\nArgument usage: u p db Rpath [ dist [ num_opp ] ]\n
         u = MySQL username\n
         p = MySQL password\n
+        db = Database name\n
+        Rpath = path to R executable\n
         dist = Method to generate random opponents. Default is 'discrete'. Options:'discrete','continuous','single'\n
-        num_opp = Number of opponents of each kind to generate. Default is 200. If 'single' is chosen num_opp is always 1.";
+        num_opp = Number of opponents of each kind to generate. Default is 200. If 'single' is chosen num_opp is always 1.\n";
     exit();
 }
-// 
+//
 // **********Get real data
 // Setup
 $batters = array();
 $pitchers = array();
-$mysqli = mysqli_connect("127.0.0.1", $argv[1], $argv[2], "mlb");
+$mysqli = mysqli_connect("127.0.0.1", $argv[1], $argv[2], $argv[3]);
 if (!$mysqli) {
     die("Failed to connect to MySQL: (" . mysqli_connect_errno() . ") " . mysqli_connect_error());
 }
@@ -59,21 +60,22 @@ $avgBattingOpponent = array('OB' => 7.5, 'SO' => 1.15, 'GB' => 1.77, 'FB' => 1.0
 // Customize arguments for R script
 $type = "discrete";
 $rscript_count = '200';
-if(isset($argv[3])){
-    $type = $argv[3];
+if(isset($argv[5])){
+    $type = $argv[5];
 }
-if(isset($argv[4])){
-    $rscript_count = $argv[4];
+if(isset($argv[6])){
+    $rscript_count = $argv[6];
 }
 if($type != "single"){
-    $RScriptCmdArgs = $argv[1].' '.$argv[2].' '.$type.' '.$rscript_count;
-    $cmd = $pathToRExecutable.' '.dirname(__FILE__).'\..\r\script.R'.' '.$RScriptCmdArgs;
+    $RScriptCmdArgs = $argv[1].' '.$argv[2].' '.$argv[3].' '.$type.' '.$rscript_count;
+    $cmd = $argv[4].' '.dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'r'.DIRECTORY_SEPARATOR.'script.R'.' '.$RScriptCmdArgs;
     echo "\n***\nPassing R script the args: ".$RScriptCmdArgs."\n***\n";
     exec($cmd, $json);
-    if(count($json) > 1){ // The first result is a log of defining MYSQL_HOME
-        $json = $json[1]; // The first result is a log of defining MYSQL_HOME, so this is the actual returned result
+    $json = $json[0];
+    try {
         // Transform returned json into a formatted set of batters
         $json = substr($json, 4);
+
         $json = stripslashes($json);
         $json = trim($json, '"');
         $json = explode("},{", $json); // need to add in the braces again after this...
@@ -83,8 +85,8 @@ if($type != "single"){
         $pit_json = json_decode($pit_json, true);
     //    print_r($bat_json);print_r($pit_json);exit;
     }
-    else{
-        echo "\n R script returned NULL.\nCan't proceed.";
+    catch (Exception $e){
+        echo "\n R script returned NULL.\nCan't proceed.\n";
         exit();
     }
     echo "\n***\nPassing distribution of players from R script to calculate against.\n***\n";
@@ -110,10 +112,11 @@ $pCards = playersToCards($pitchers, 'p', $avgBattingOpponent);
 //print_r(getCardAverages($pCards));
 
 // Print results file
+$filename = "formula_output" . time() . ".txt";
 //file_put_contents("formula_output.txt",print_r($batters, true),FILE_APPEND);
-file_put_contents("formula_output.txt",print_r($bCards, true));//,FILE_APPEND);
+file_put_contents($filename,print_r($bCards, true));//,FILE_APPEND);
 //file_put_contents("formula_output.txt",print_r($pitchers, true),FILE_APPEND);
-file_put_contents("formula_output.txt",print_r($pCards, true),FILE_APPEND);
+file_put_contents($filename,print_r($pCards, true),FILE_APPEND);
 
 //print_r(averageMetaOnbase(getCardAverages($bCards),getCardAverages($pCards)));
 

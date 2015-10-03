@@ -29,16 +29,17 @@ Play baseball with trading cards, where 20 sided dice are rolled to determine th
 
 ##### Usage
 
-Really? You want to run this script?? Ok!
-
-- Required: [showdown-data](https://github.com/digitgopher/showdown-data), specifically `cards-tables.sql` for card data and `[yyyy]_all.sql` for MLB season data.
-- Highly Encouraged: Use R and required libraries (truncnorm, rjson, RMySQL). Set `$pathToRExecutable` in `formula.php`. Optional because simulation will run without R if `single` is used for `num_opp`. In this case a distribution of opponents won't be available, as there is only one defined opponent card representing a 'standard' batter/pitcher.
-
 ```
-    php formula.php u p [ dist [ num_opp ] ]
+    php formula.php u p db Rpath [ dist [ num_opp ] ]
         u = MySQL username
         p = MySQL password
+        db = database name
+        Rpath = path to R executable
         dist = Method to generate random opponents. Default (and only recommended option) is 'discrete'. Options:'discrete','continuous','single'.
         num_opp = Number of opponents of each kind to generate. Default is 200. If 'single' is chosen num_opp is always 1.
 ```
+
+- Data is found [here](https://github.com/digitgopher/showdown-data), specifically `cards-tables.sql` for card data and `[yyyy]_all.sql` for MLB season data.
+- R and required libraries (truncnorm, rjson, RMySQL) used in the default case. If `single` is used for `num_opp`, R is not needed so pass a dummy argument. In this case a distribution of opponents won't be available, as there is only one defined opponent card representing a 'standard' batter/pitcher.
+
 *Output is very raw. The results format is still under development, see [releases](https://github.com/digitgopher/MLBShowdownStatistics/releases) for prototypes to date.*
