@@ -131,7 +131,7 @@ class PitcherFormula
     }
 
     // Built to take a representative sample of batters, the game calculations all depend on the selection of batters!
-    function computePercentDifferent($pitcher, $batters){
+    function computeSquaredDifference($pitcher, $batters){
         // Copied from above
         $batted_outs = $this->real['AB'] - $this->real['SO'] - $this->real['H'];
         $GBouts_tot = $this->real['G/F']*$batted_outs/(1+$this->real['G/F']);
@@ -167,9 +167,10 @@ class PitcherFormula
         foreach ($calcs as $key => &$value) {
             $value /= count($batters['OB']);// Represents number of batters
         }
-        // Get $diffs = difference between reals and calcs
+        // Get $diffs = squared difference between reals and calcs
         foreach ($diffs as $key => &$value) {
-            $value = abs(($reals[$key] - $calcs[$key]) / ($reals[$key] > 0 ? $reals[$key] : INF));
+            $diff = abs(($reals[$key] - $calcs[$key]) / ($reals[$key] > 0 ? $reals[$key] : INF));
+            $value = $diff * $diff;
         }
         return $diffs;
     }

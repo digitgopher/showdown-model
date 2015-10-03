@@ -143,14 +143,14 @@ function playersToCards($players, $type, $avgOpp){
     // Get card of all batters
     $inc = 0;
     foreach ($players as $num => $player) {
-        print "Processing player ".++$inc.": ".$player->real['nameFirst']." ".$player->real['nameLast']."\n";
+        //print "Processing player ".++$inc.": ".$player->real['nameFirst']." ".$player->real['nameLast']."\n";
         $diffs = array();
         $difsums = array();
         $result = array();
         // Loop through number of outs on the card to find ideal amount
         for ($index = $minVal; $index <= $maxVal; $index++) {
             $result[$index] = $player->getRawCard($avgOpp, $index);
-            $diffs[$index] = $player->computePercentDifferent(processChart($result[$index]), $avgOpp);
+            $diffs[$index] = $player->computeSquaredDifference(processChart($result[$index]), $avgOpp);
         }
         $index--; // get back to a usable value!
         $difsums = array();
