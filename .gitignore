@@ -1,3 +1,6 @@
+# output files
+*formula_output*
+
 # Jekyll build files
 _site
 
@@ -21,7 +24,7 @@ node.js
 *.exe
 *.o
 *.so
- 
+
 # Packages #
 ############
 # it's better to unpack these files and commit the raw source
@@ -34,11 +37,11 @@ node.js
 *.rar
 *.tar
 *.zip
- 
+
 # Logs #
 ######################
 *.log
- 
+
 # OS generated files #
 ######################
 .DS_Store
