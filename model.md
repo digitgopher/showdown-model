@@ -30,7 +30,7 @@ The developed model consists of five steps.
 
 **Step 2**: Obtain a *representative sample* of players from the existing Showdown universe.
 
-1. Get the average frequency for *each* chart result (SO, GB, etc). 
+1. Get the average frequency for *each* chart result (SO, GB, etc).
 	- Example: 5% of all pitchers have 1 PU result, 60% have 2 PU results, and 35% have 3 PU results.
 2. Generate a large number (say 1000) of random players from the identified discrete result probabilities. Normalize so all chart values sum to 20.
 
@@ -42,7 +42,7 @@ There is an OB/out trade-off. We could decrease a batter's OB, but if we also tu
 
 To calculate a card, there are 2 steps (We give the example of a batter, but a pitcher could be calculated by similar means):
 
-1. **Calculate OB.** 
+1. **Calculate OB.**
   The chance of getting on-base can be modeled as:
 
   *Equation 1*:
@@ -59,11 +59,11 @@ To calculate a card, there are 2 steps (We give the example of a batter, but a p
 
 2. **Calculate precise number of slots for each chart result.**
 
-  The key here is expressing season results in terms of plate appearances, as this is most directly modeled in Showdown. 
+  The key here is expressing season results in terms of plate appearances, as this is most directly modeled in Showdown.
 
   We can determine in terms of plate appearances how often a player achieved each possible result:
-  
-  
+
+
   | Card Chart | Season Statistic |
   | --- | --- |
   | SO | strikeouts |
@@ -79,13 +79,13 @@ To calculate a card, there are 2 steps (We give the example of a batter, but a p
 
 
   > Notes:
-  
+
   > 1. r = ground-ball-to-fly-ball ratio, a published statistic.
-  
+
   > 2. o = in-play outs = (atbats - strikeouts - hits).
-  
+
   > 3. Alternative equations could be given regarding FB, but it is simplest to relate to the defined GB Statistic.
-  
+
   > 4. There is no realistic analog for single+.
 
   The number of available card slots is 20. All the statistics together will sum to equal Plate Appearances, both in Showdown and the season statistics. Note this strategy rolls up other possibilities like fielders' choices, sacrifices, etc.
@@ -100,7 +100,7 @@ To calculate a card, there are 2 steps (We give the example of a batter, but a p
   *Equation 4*:
   ```Doubles/PlateAppearances = (OB-C)/20 * NumDoublesOnBattersChart/20 + (20-(OB-C))/20 * NumDoublesOnPitchersChart/20```
 
-  Again, we know everything except `NumDoublesOnBattersChart`, so we can solve. This is done for all statistics. 
+  Again, we know everything except `NumDoublesOnBattersChart`, so we can solve. This is done for all statistics.
 
   Since all the input statistics add to Plate Appearances, we end up with precise values for each slot (that add to 20 as they should). Remember that there will be many pitcher opponents against which we are calculating, so they are averages in the end.
 
@@ -120,37 +120,37 @@ To calculate a card, there are 2 steps (We give the example of a batter, but a p
   | [2B] | 1.180976 |
   | [3B] | 0 |
   | [HR] | 0.819933 |
-  
-  
+
+
   _The values correspond to how the slots should be divided on the chart with the given number of outs (five in this case; they happen to all be assigned to SO)._
 
 3. **Round chart results.**
 
-  Turn the precise values into results we could put on a printed chart. 
+  Turn the precise values into results we could put on a printed chart.
 
-  Since you can't put 2.34 SO results on a chart, the computed values must be rounded, in this case the printed SO chart value could be "1-2". 
+  Since you can't put 2.34 SO results on a chart, the computed values must be rounded, in this case the printed SO chart value could be "1-2".
 
   However, in any case the most appropriate values (1B+ or otherwise) will be adjusted.
-  
+
   Most appropriate values are defined as the values which were rounded the most. For example, if after rounding a chart adds to 19, then the value that is 1) *rounded down* and 2) *the closest to being rounded up*, is rounded up instead.
 
 
-**Step 4**: Choose the OB/num-of-out (or Control/num-of-out) combination that, after the card is calculated, leads to the *least un-accurate card*. 
+**Step 4**: Choose the OB/num-of-out (or Control/num-of-out) combination that, after the card is calculated, leads to the *least un-accurate card*.
 
   Essentially this is answering the question "with the rounded chart values, how far off are the expected results?" (i.e. the percent difference between real-life season 2B/PA and expected Showdown 2B/PA)
 
   If we used two through seven outs as possibilities for batters, each batter will have 6 possible cards. Each card's total error is calculated, and the one with the least error is selected.
 
   Example:
-  
+
   > _Batter season HR/PA = .0315._
-  
+
   > _Batter OB = 8_
-  
+
   > _Batter HR results = 3_
-  
+
   > _Pitcher C = 4_ (Again, we actually calculate for all the pitchers in our sample and average the result. Only one pitcher is shown here for simplicity.)
-  
+
   > _Pitcher HR results = 0_
 
   > _Using Equation 4 obtains: Homeruns/PlateAppearances = (8 - 4)/20\*3/20 + (20 - (8 - 4))/20\*0/20 = .03_
@@ -205,9 +205,9 @@ Though the term OOB should be used when dealing with pitchers, for simplicity we
 
 In thinking about how to determine a pitcher's control number, a few questions have to be asked.
 
-What is the point of control? The control number determines how often the swing is rolled on the pitcher's chart. Generally, if the pitcher has advantage the batter will be out, and if the batter has advantage he will get on base. 
+What is the point of control? The control number determines how often the swing is rolled on the pitcher's chart. Generally, if the pitcher has advantage the batter will be out, and if the batter has advantage he will get on base.
 
-When considering exact number of outs on each chart, the scenarios expand and intermix. The advantage to this added complexity is greater granularity created by the increased combination of chart interactions. 
+When considering exact number of outs on each chart, the scenarios expand and intermix. The advantage to this added complexity is greater granularity created by the increased combination of chart interactions.
 
 Irregardless, essentially control equates to OOB. More precisely, control, along with the number of outs on the pitcher's chart, combined with OB and number of outs on batter's chart provides an exact measure of OBP.
 
@@ -273,7 +273,7 @@ Here are the percentiles for a pitcher outs distribution, based on "normal distr
 | 99th | 6.546 |
 
 
-Below is the ranking of pitcher charts, sorted by OBP – the best pitcher is at the top, the worst at the bottom. The combination of pitcher charts with control 0 – 6 and 12 – 19 outs on chart are included. 
+Below is the ranking of pitcher charts, sorted by OBP – the best pitcher is at the top, the worst at the bottom. The combination of pitcher charts with control 0 – 6 and 12 – 19 outs on chart are included.
 
 Admittedly, this is a liberal number of chart combinations. Charts like [2,12] and [5,19] may be uncommon. However, there isn't really a reason to exclude them for now, though the ridiculous four charts [0,19] [1,19] [6,12] and [5,12] are excluded.
 
@@ -341,10 +341,10 @@ An explanation of each column pair:
 | [0,12] | 0.547 | [0,12] | 0.559 | [0,12] | 0.516 | [0,12] | 0.601 |
 
 
-Weak/Strong Batters categories are only included so the change in pitcher performance can be observed. 
+Weak/Strong Batters categories are only included so the change in pitcher performance can be observed.
 
 Observation: In a relative sense, low control higher out pitchers are better against lower onbase batters. This is may be intuitive, but the empirical data leaves no doubt.
 
-Another concept to be considered is playing by NL rules, where the pitcher comes to bat. A [5,14] pitcher would seem much more desirable than a [1,17] pitcher, because he would have the chance of getting the advantage with more possibilites for getting on base. Both these charts have a 0.369 OOB against a straight-average player set (one each of 48 batter charts, OB 4-11 outs 1-6). 
+Another concept to be considered is playing by NL rules, where the pitcher comes to bat. A [5,14] pitcher would seem much more desirable than a [1,17] pitcher, because he would have the chance of getting the advantage with more possibilites for getting on base. Both these charts have a 0.369 OOB against a straight-average player set (one each of 48 batter charts, OB 4-11 outs 1-6).
 
 In reality, pitcher batting isn't really a factor. Against a somewhat average [3,15] pitcher, the two pitchers in question will hit 0.255 and 0.250 respectively. Even against a lower-tier [0,15] pitcher, they will go 0.263 and 0.245 respectively. With such a small difference, the value of a pitcher batting can be safely ignored.

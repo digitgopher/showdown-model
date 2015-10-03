@@ -36,8 +36,8 @@ function getCardAverages($cards){
     return ['avg' => $avgs,'sd' => $stddevs];
 }
 
-// Function to calculate standard deviation (uses sd_square)    
-function sd($array){   
+// Function to calculate standard deviation (uses sd_square)
+function sd($array){
     // square root of sum of squares devided by N
     return sqrt(array_sum(array_map("sd_square", $array, array_fill(0,count($array), (array_sum($array) / count($array)) ) ) ) / (count($array)/*Subtract 1 if sample rather than population*/) );
 }
@@ -93,7 +93,7 @@ function roundChart($chart, $firstKey){
     foreach ($chart as $key => $value) {
         $temp[$key] = round($value);
     }
-    
+
     $count = array_sum($temp) - $temp[$firstKey];
 
     // Deal with the rounding not adding up to 20
@@ -404,7 +404,7 @@ function roundChart($chart, $firstKey){
                 }
             }
             if($curKey == ''){
-                // There was no third 'most off' value, so use one of the first ones 
+                // There was no third 'most off' value, so use one of the first ones
                 if($temp[$markedKey] > 0){
                     $temp[$markedKey]--;
                 }

@@ -4,7 +4,7 @@
 $teams = ['SEA','TEX','LAA','HOU','OAK',
           'MIN','KCR','DET','CLE','CHW',
           'BOS','NYY','TBR','TOR','BAL',
-          
+
           'LAD','COL','ARI','SFG','SDP',
           'STL','CIN','MIL','PIT','CHC',
           'ATL','MIA','NYM','PHI','WSN'];
@@ -33,17 +33,17 @@ $b_query = "SELECT
             bs.CS
     FROM 2014_bat_std bs
     INNER JOIN 2014_bat_ratio br ON bs.nameFull = br.nameFull AND bs.PA = br.PA
-    WHERE 
+    WHERE
         # Adjust the selected pitchers as needed
         #bs.nameLast = 'Zunino'
         #bs.nameLast = 'McCutchen'
         bs.AB > 150
-        
+
     ORDER BY bs.AB DESC
 ;";
 
 // Set Pitchers
-$p_query = "SELECT                 
+$p_query = "SELECT
             ps.nameFirst,
             ps.nameLast,
             po.AB,
@@ -69,17 +69,17 @@ $p_query = "SELECT
     FROM 2014_pitch_std ps
     INNER JOIN 2014_pitch_opp po ON ps.nameFull = po.nameFull AND ps.IP = po.IP
     INNER JOIN 2014_pitch_ratio pr ON ps.nameFull = pr.nameFull AND ps.IP = pr.IP
-    WHERE 
+    WHERE
         # Adjust the selected pitchers as needed
         #ps.nameFull = 'Madison Bumgarner'
         ps.G > 40 OR ps.GS > 15
-        #ps.G > 70 
-	
+        #ps.G > 70
+
     ORDER BY po.AB DESC
 ;";
 
 $lg_averages = "
-    SELECT  
+    SELECT
 	# Get weighted averages (straight averages will be heavy on the pitchers with 0/1/2 atbats, etc, treating them as a full player)
 	SUM(BA*PA)/SUM(PA) as BA,
 	SUM(OBP*PA)/SUM(PA) as OBP,
@@ -91,6 +91,6 @@ $lg_averages = "
 	SUM(SB)/(SUM(PA)/600) as Sb,
 	SUM(CS)/(SUM(PA)/600) as Cs,
 	SUM(H)/(SUM(PA)/600) as H,
-	COUNT(*) 
+	COUNT(*)
 FROM mlb.2014_bat_std
 ";
